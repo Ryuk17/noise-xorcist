@@ -10,14 +10,16 @@
 
 import torch
 import torch.nn as nn
+import torchaudio
+import soundfile as sf
 
 class FilterTransform(nn.Module):
     def __init__(self, batch_size):
         super().__init__()
-        self.a_hp = [-1.99599, 0.99600]
-        self.b_hp = [-2, 1]
-        self.mem_hp_x = torch.zeros(2)
-        self.mem_hp_n = torch.zeros(2)
+        self.a_hp = torch.tensor([-1.99599, 0.99600])
+        self.b_hp = torch.tensor([-2, 1])
+        self.mem_hp_x = torch.zeros(batch_size, 2)
+        self.mem_hp_n = torch.zeros(batch_size, 2)
         self.mem_resp_x = torch.zeros((batch_size, 2))
         self.mem_resp_n = torch.zeros((batch_size, 2))
         self.batch_size = batch_size
@@ -31,7 +33,7 @@ class FilterTransform(nn.Module):
         return a, b
 
     def _biquad(self, mem, x, b, a):
-        y = torch.tensor(x.shape)
+        y = torch.zeros(x.shape)
         for i in range(x.shape[1]):
             xi = x[:, i]
             yi = x[:, i] + mem[:, 0]
@@ -48,3 +50,19 @@ class FilterTransform(nn.Module):
         n = self._biquad(self.mem_hp_n, n, self.b_hp, self.a_hp)
         n = self._biquad(self.mem_resp_n, n, b, a)
         return x, n
+
+
+if __name__ == "__main__":
+    speech, sr1 = torchaudio.load("./sample/speech.wav")
+    noise, sr2 = torchaudio.load("./sample/noise.wav")
+    assert sr1 == sr2
+    assert speech.shape == noise.shape
+
+    speech = torch.vstack((speech, speech))
+    noise = torch.vstack((noise, noise))
+
+    transformer = FilterTransform(2)
+    s, n = transformer(speech, noise)
+
+    sf.write("./sample/s.wav", s[0].numpy(), sr1)
+    sf.write("./sample/n.wav", n[0].numpy(), sr2)
