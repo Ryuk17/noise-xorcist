@@ -46,9 +46,10 @@ class FilterTransform(nn.Module):
         a, b = self._rand_resp()
         x = self._biquad(self.mem_hp_x, x, self.b_hp, self.a_hp)
         x = self._biquad(self.mem_resp_x, x, b, a)
-
+        
+        a_noise, b_noise = self._rand_resp()
         n = self._biquad(self.mem_hp_n, n, self.b_hp, self.a_hp)
-        n = self._biquad(self.mem_resp_n, n, b, a)
+        n = self._biquad(self.mem_resp_n, n, b_noise, a_noise)
         return x, n
 
 
