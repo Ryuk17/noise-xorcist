@@ -1,5 +1,5 @@
 """
-@FileName: RNNTransform.py
+@FileName: spec_aug.py
 @Description: Implement RNNTransform
 @Author: Ryuk
 @CreateDate: 2022/03/01
@@ -41,8 +41,8 @@ class SpecTransform(nn.Module):
 
 
 if __name__ == "__main__":
-    speech, sr1 = torchaudio.load("./sample/speech.wav")
-    noise, sr2 = torchaudio.load("./sample/noise.wav")
+    speech, sr1 = torchaudio.load("../sample/speech.wav")
+    noise, sr2 = torchaudio.load("../sample/noise.wav")
     assert sr1 == sr2
     assert speech.shape == noise.shape
 
@@ -52,5 +52,5 @@ if __name__ == "__main__":
     transformer = SpecTransform()
     s, n = transformer(speech, noise)
 
-    sf.write("./sample/s.wav", s[0].numpy(), sr1)
-    sf.write("./sample/n.wav", n[0].numpy(), sr2)
+    sf.write("../sample/s_spec_trans.wav", s[0].numpy(), sr1)
+    sf.write("../sample/n_spec_trans.wav", n[0].numpy(), sr2)

@@ -8,4 +8,19 @@ SpecTransform was proposed in [RNNoise](https://github.com/xiph/rnnoisehttps://g
 speech signal independently for each training example using a second order filter of the form  
 ![image](https://user-images.githubusercontent.com/22525811/159518560-8ed13625-21c4-40c5-b07a-4655c3b80f36.png)
 
++ **[MixTransform]()**
+
++ **[VolumeTransform]()**
+
++ **[FilterTransform]()**
+
++ **[ClipTransform]()**
+
++ **[ReverbTransform]()**
+
++ **[BreakTransform]()**
+
++ **[HowlingTransform]()**
+
++ **[DynamicTransform]()**
 
