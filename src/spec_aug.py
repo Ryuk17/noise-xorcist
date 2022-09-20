@@ -29,15 +29,11 @@ class SpecTransform(nn.Module):
         b2 = 0.75 * self._uni_rand()
         return a1, a2, b1, b2
 
-    def forward(self, x, n):
+    def forward(self, x):
         a1, a2, b1, b2 = self._rand_resp()
         x = torchaudio.functional.biquad(x, 1, self.b_hp[0], self.b_hp[1], 1, self.a_hp[0], self.a_hp[1])
         x = torchaudio.functional.biquad(x, 1, b1, b2, 1, a1, a2)
-
-        a1, a2, b1, b2 = self._rand_resp()
-        n = torchaudio.functional.biquad(n, 1, self.b_hp[0], self.b_hp[1], 1, self.a_hp[0], self.a_hp[1])
-        n = torchaudio.functional.biquad(n, 1, b1, b2, 1, a1, a2)
-        return x, n
+        return x
 
 
 if __name__ == "__main__":
@@ -50,7 +46,8 @@ if __name__ == "__main__":
     noise = torch.vstack((noise, noise))
 
     transformer = SpecTransform()
-    s, n = transformer(speech, noise)
+    s = transformer(speech)
+    n = transformer(noise)
 
     sf.write("../sample/s_spec_trans.wav", s[0].numpy(), sr1)
     sf.write("../sample/n_spec_trans.wav", n[0].numpy(), sr2)

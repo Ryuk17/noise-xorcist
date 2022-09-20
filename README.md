@@ -1,16 +1,20 @@
 # SEAugment
-Data augment for speech enhancement
+Data augmentations for speech enhancement
 
 
 ## What's in it
-+ **[SpecTransform](https://github.com/Ryuk17/SEAugment/blob/d2c6f4aa0c4a62a5e0f0641d76cfc907de86da37/se_augment.py#L16)**  
-SpecTransform was proposed in [RNNoise](https://github.com/xiph/rnnoisehttps://github.com/xiph/rnnoise), which is achieved by filtering the noise and
-speech signal independently for each training example using a second order filter of the form  
-![image](https://user-images.githubusercontent.com/22525811/159518560-8ed13625-21c4-40c5-b07a-4655c3b80f36.png)
++ **[SpecTransform](https://github.com/Ryuk17/SEAugment/blob/main/src/spec_aug.py)**
+SpecTransform was proposed in [RNNoise](https://github.com/xiph/rnnoisehttps://github.com/xiph/rnnoise), which is achieved by filtering the noise and speech signal independently for each training example using a second order filter    
+![SpecTransform](https://github.com/Ryuk17/SEAugment/blob/main/assets/spec_trans.png)
 
-+ **[MixTransform]()**
 
-+ **[VolumeTransform]()**
++ **[MixTransform](https://github.com/Ryuk17/SEAugment/blob/main/src/mix_aug.py)**
+MixTransform use different snr combine speech samples and noise samples, which is a common method for data augment in speech enhencement  
+![MixTransform](https://github.com/Ryuk17/SEAugment/blob/main/assets/mix_trans.png)
+
++ **[VolTransform](https://github.com/Ryuk17/SEAugment/blob/main/src/vol_aug.py)**
+VolTransform use step gains to process target audio, which simulates different microphone volumes  
+![VolTransform](https://github.com/Ryuk17/SEAugment/blob/main/assets/vol_trans.png)
 
 + **[FilterTransform]()**
 
