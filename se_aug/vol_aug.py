@@ -14,7 +14,7 @@ import torchaudio
 import soundfile as sf
 
 class VolTransform(nn.Module):
-    def __init__(self, sample_rate=16000, segment_len=0.5, vol_ceil=-10, vol_floor=10):
+    def __init__(self, sample_rate=16000, segment_len=0.5, vol_ceil=10, vol_floor=-10):
         super().__init__()
         self.sample_rate = sample_rate
         self.segment_len = segment_len

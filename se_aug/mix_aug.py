@@ -14,13 +14,13 @@ import torchaudio
 import soundfile as sf
 
 class MixTransform(nn.Module):
-    def __init__(self, snr_ceil, snr_floor):
+    def __init__(self, snr_ceil=30, snr_floor=-5):
         super().__init__()
         self.snr_ceil = snr_ceil
         self.snr_floor = snr_floor
 
     def get_snr(self, n):
-        return (self.snr_ceil - self.snr_floor) * torch.rand([n]) + self.snr_ceil
+        return (self.snr_floor - self.snr_ceil) * torch.rand([n]) + self.snr_ceil
 
     def forward(self, speech, noise):
         samples = speech.size(0)
