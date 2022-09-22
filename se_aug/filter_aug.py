@@ -35,7 +35,6 @@ class FilterTransform(nn.Module):
         gain = self.get_gain()
         center_freq = self.get_center_freq()
 
-        print(gain, center_freq)
         x = torchaudio.functional.equalizer_biquad(x,
                                                    sample_rate=self.sample_rate,
                                                    center_freq=center_freq,
