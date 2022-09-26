@@ -29,7 +29,9 @@ uses convolve to simulates reverberation. RIR datasets: [OpenSLR26](http://www.o
 
 
 + **[BreakTransform]()**
-use mask to simulates frame drop in communication
+use time-axis mask to simulates frame drop in communication  
+![BreakTransform](https://github.com/Ryuk17/SEAugment/blob/main/assets/break_trans.png)
+
 
 + **[HowlingTransform]()**
 

@@ -14,6 +14,7 @@ from .vol_aug import VolTransform
 from .filter_aug import FilterTransform
 from .clip_aug import ClipTransform
 from .reverb_aug import ReverbTransform
+from .break_aug import BreakTransform
 
 __version__ = "0.0.1"
 __author__ = "Ryuk"
@@ -22,4 +23,5 @@ __all__ = [SpecTransform,
            VolTransform,
            FilterTransform,
            ClipTransform,
-           ReverbTransform]
+           ReverbTransform,
+           BreakTransform]
