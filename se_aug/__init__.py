@@ -15,13 +15,17 @@ from .filter_aug import FilterTransform
 from .clip_aug import ClipTransform
 from .reverb_aug import ReverbTransform
 from .break_aug import BreakTransform
+from  .howl_aug import HowlingTransform
 
 __version__ = "0.0.1"
 __author__ = "Ryuk"
-__all__ = [SpecTransform,
-           MixTransform,
-           VolTransform,
-           FilterTransform,
-           ClipTransform,
-           ReverbTransform,
-           BreakTransform]
+__all__ = [
+        SpecTransform,
+        MixTransform,
+        VolTransform,
+        FilterTransform,
+        ClipTransform,
+        ReverbTransform,
+        BreakTransform,
+        HowlingTransform
+    ]
