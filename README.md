@@ -34,6 +34,8 @@ use time-axis mask to simulates frame drop in communication
 
 
 + **[HowlingTransform]()**
+use IR and feedback to generate howling effect  
+![HowlingTransform](https://github.com/Ryuk17/SEAugment/blob/main/assets/howling_trans.png)
 
 + **[DynamicTransform]()**
 
