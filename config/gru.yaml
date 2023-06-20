@@ -1,18 +1,22 @@
 DEVICE: cuda                # Training device (cuda, cpu, cuda:0, cuda:1)
 
 MODEL:
-    MODEL_NAME: GRU
-    PRETRAINED: 
+    MODEL_NAME: gru
+    PRETRAINED:
+    N_GRU_LAYERS: 3
+    GRU_DROPOUT: 0.5
+    ALPHA: 0.35
 
 DATA:
-    DATASET: NORM_FREQ_VAD
+    DATASET: norm_freq_vad
+    NUM_WORKERS: 8
     SAMPLE_RATE: 16000          
     SAMPLE_LENGTH: 10
     N_FFT: 512
     FRAME_LENGTH: 512
     HOP_LENGTH: 256
-    FFT_WINDOW: HANNING
-    ONLINE_AUG: TRUE
+    FFT_WINDOW: hanning
+    ONLINE_AUG: true
     SNR_RANGE: [-5, 30]
     VAD_FREQ_FLOOR: 300
     VAD_FREQ_CEIL: 5000
@@ -27,8 +31,11 @@ TRAIN:
     BATCH_SIZE: 256             # batch size to use
     EVAL_INTERVAL: 1            # evaluation interval
     AMP: false                  # Mixed Precision Training
+    DDP: false
     LR: 0.001                 # lr = (batch_size / 1024) * 1e-3
     DECAY: 0.005                # lr decay rate
+    OPTIMIER: sgd
+    SCHEDULER:
     LOSSES:
     SAVE_DIR:
 

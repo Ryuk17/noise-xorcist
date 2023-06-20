@@ -72,7 +72,7 @@ class NormFreqVAD(Dataset):
             if self.rir_dir is not None:
                 rir_path = self.rir_wav[idx]
                 rir_waveform, _ = torchaudio.load(rir_path, normalization=2 ** 15)
-            noisy_waveform = gen_noisy_online(self.cfg, clean_waveform, noise_waveform, rir_waveform)
+            noisy_waveform = gen_noisy(self.cfg, clean_waveform, noise_waveform, rir_waveform)
         else:
             noisy_path = self.noisy_wav[idx]
             noisy_waveform, _ = torchaudio.load(noisy_path, normalization=2 ** 15)

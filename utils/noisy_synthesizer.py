@@ -12,5 +12,5 @@ import torch
 
 
 
-def gen_noisy_online(cfg, clean_wav, noise_wav, rir_wav=None):
+def gen_noisy(cfg, clean_wav, noise_wav, rir_wav=None):
     pass
