@@ -20,10 +20,11 @@ class BreakAugment:
     def get_mask(self, x):
         break_count = (self.break_floor - self.break_ceil) * random.random() + self.break_ceil
         break_duration = break_count * self.break_segment
-        mask = np.ones(x.size())
-        break_start = int(x.size(1) * random.random())
-        break_end = int(min(x.size(1), break_start+break_duration))
-        mask[:, break_start:break_end] = 0
+        x_length = x.shape[0]
+        mask = np.ones(x_length)
+        break_start = int(x_length * random.random())
+        break_end = int(min(x_length, break_start+break_duration))
+        mask[break_start:break_end] = 0
         return mask
 
     def __call__(self, x):
@@ -47,9 +48,9 @@ class ClipAugment:
 
 
 class HowlingAugment:
-    def __init__(self, IR, gain_floor=1, gain_ceil=10, frame_len=128, hop_len=None):
+    def __init__(self, gain_floor=1, gain_ceil=10, frame_len=128, hop_len=None):
         super().__init__()
-        self.IR = IR
+
         self.gain_floor = gain_floor
         self.gain_ceil = gain_ceil
         self.frame_len = frame_len
@@ -86,12 +87,12 @@ class HowlingAugment:
         return (self.gain_floor - self.gain_ceil) * random.random() + self.gain_ceil
 
     def howling(self, x):
-        sample_len = x.size(1)
-        howling_out = np.zeros(x.size())
-        conv_len = self.frame_len + self.IR.size(1) - 1
+        sample_len = x.shape[0]
+        howling_out = np.zeros(sample_len)
+        conv_len = self.frame_len + self.IR.shape[0] - 1
         frame_start = 0
         for i in range(sample_len):
-            cur_frame = x[:, frame_start:frame_start+self.frame_len]
+            cur_frame = x[frame_start:frame_start+self.frame_len]
             windowed_frame = self.win * cur_frame
             howling_out[:,frame_start:frame_start+self.frame_len] += windowed_frame
 
@@ -110,7 +111,11 @@ class HowlingAugment:
         howling_out = np.maximum(howling_out, -np.ones(sample_len))
         return howling_out
 
-    def __call__(self, x):
+    def __call__(self, x, IR=None):
+        if IR is None:
+            return x
+
+        self.IR = IR
         target_gain = self.get_MSG() + 2
         self.scale_IR(target_gain)
         x = self.howling(x)
@@ -127,22 +132,21 @@ class MixAugment:
         return (self.snr_floor - self.snr_ceil) * np.random.rand([n]) + self.snr_ceil
 
     def __call__(self, speech, noise):
-        samples = speech.size(0)
+        samples = speech.shape[0]
         snr = self.get_snr(samples)
         noise = noise * np.norm(speech) / np.norm(noise)
-        scalar = np.pow(10.0, (0.05 * snr)).reshape([speech.size(0), 1])
+        scalar = np.pow(10.0, (0.05 * snr)).reshape([speech.shape[0], 1])
         noise = np.div(noise, scalar)
         mix = speech + noise
         return mix
 
 
 class ReverbAugment:
-    def __init__(self, rir):
+    def __init__(self):
         super().__init__()
-        self.rir = rir
 
-    def __call__(self, x):
-        reverbed = scipy.signal.fftconvolve(x, self.rir, mode="full")
+    def __call__(self, x, rir):
+        reverbed = scipy.signal.fftconvolve(x, rir, mode="full")
         reverbed = reverbed[0: x.shape[0]]
         return reverbed
 
@@ -190,9 +194,56 @@ class VolumeAugment:
         return segments
 
     def __call__(self, x):
-        step_db = self.get_vol(x.size(1))
-        for i in range(step_db.size(0)):
+        step_db = self.get_vol(x.shape[0])
+        for i in range(step_db.shape[0]):
             start = i * self.segment_samples
-            end = min((i+1) * self.segment_samples, x.size(1))
+            end = min((i+1) * self.segment_samples, x.shape[0])
             x[:, start:end] = self.apply_gain(x[:, start:end], step_db[i])
+        return x
+
+
+class RandomAugment:
+    def __init__(self,  cfg, augment_prob=0.1, augment_num=2, augment_weight=None):
+        self.augment_prob = augment_prob
+        self.augment_num = augment_num
+        self.augment_weight = augment_weight
+
+        self.break_op = BreakAugment(sample_rate=cfg['sample_rate'],
+                                         break_duration=cfg['break_duration'],
+                                         break_ceil=cfg['break_ceil'],
+                                         break_floor=cfg['break_floor'])
+
+        self.clip_op = ClipAugment(clip_ceil=cfg['clip_ceil'],
+                                   clip_floor=cfg['clip_floor'])
+
+        self.howl_op = HowlingAugment(gain_floor=cfg['gain_floor'],
+                                      gain_ceil=cfg['gain_ceil'],
+                                      frame_len=cfg['frame_len'],
+                                      hop_len=cfg['hop_len'])
+
+        self.reverb_op = ReverbAugment()
+        self.spec_op = SpecAugment()
+        self.vol_op = VolumeAugment(segment_len=cfg['segment_len'],
+                                    vol_ceil=cfg['vol_ceil'],
+                                    vol_floor=cfg['vol_floor'])
+
+        self.op_list = [self.break_op, self.clip_op, self.howl_op, self.reverb_op, self.spec_op, self.vol_op]
+        print(self.op_list)
+
+    def __call__(self, x, rir=None):
+
+        if self.augment_prob < 1.0 and random.random() > self.augment_prob:
+            return x
+
+        if self.augment_weight is None:
+            ops = random.sample(self.op_list, self.augment_num)
+        else:
+            ops = random.choices(self.op_list, self.augment_weight, k=self.augment_num)
+
+        print("do augment", ops)
+        for op in ops:
+            if type(op) == ReverbAugment or type(op) == HowlingAugment:
+                x = op(x, rir)
+            else:
+                x = op(x)
         return x

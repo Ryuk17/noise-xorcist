@@ -20,9 +20,11 @@ import librosa
 import numpy as np
 from audiolib import is_clipped, audioread, audiowrite, snr_mixer, activitydetector
 import utils
+from augmentations import RandomAugment
+import pandas as pd
 
 
-PROCESSES = multiprocessing.cpu_count()
+PROCESSES = os.cpu_count()
 MAXTRIES = 50
 MAXFILELEN = 100
 
@@ -109,7 +111,6 @@ def build_audio(is_clean, params, filenum, audio_samples_length=-1):
 def gen_audio(is_clean, params, filenum, audio_samples_length=-1):
     '''Calls build_audio() to get an audio signal, and verify that it meets the
        activity threshold'''
-
     clipped_files = []
     low_activity_files = []
     if audio_samples_length == -1:
@@ -158,10 +159,14 @@ def main_gen(params, filenum):
         noise, noise_source_files, noise_cf, noise_laf = \
             gen_audio(False, params, filenum, len(clean))
 
+        rir = random.sample(params['rirfilenames'], 1)[0]
+        rir_wav, sr = librosa.load(str(rir), sr=params['fs'])
+
         clean_clipped_files += clean_cf
         clean_low_activity_files += clean_laf
         noise_clipped_files += noise_cf
         noise_low_activity_files += noise_laf
+        augment_op = params['augment']
 
         # mix clean speech and noise
         # if specified, use specified SNR value
@@ -170,11 +175,13 @@ def main_gen(params, filenum):
         # use a randomly sampled SNR value between the specified bounds
         else:
             snr = np.random.randint(params['snr_lower'], params['snr_upper'])
-            
+
         clean_snr, noise_snr, noisy_snr, target_level = snr_mixer(params=params, 
                                                                   clean=clean, 
                                                                   noise=noise, 
                                                                   snr=snr)
+
+        noisy_snr = augment_op(noisy_snr, rir_wav)
         # Uncomment the below lines if you need segmental SNR and comment the above lines using snr_mixer
         #clean_snr, noise_snr, noisy_snr, target_level = segmental_snr_mixer(params=params, 
         #                                                                    clean=clean, 
@@ -206,6 +213,7 @@ def main_gen(params, filenum):
     
     for i in range(len(audio_signals)):
         try:
+            print(f"write to {file_paths[i]}")
             audiowrite(file_paths[i], audio_signals[i], params['fs'])
         except Exception as e:
             print(str(e))
@@ -256,6 +264,10 @@ def main_body():
     if not os.path.exists:
         assert False, ('Noise data is required')
 
+    rir_dir = os.path.join(os.path.dirname(__file__), 'RIR')
+    if cfg['rir_dir'] != 'None':
+        rir_dir = cfg['rir_dir']
+
     params['fs'] = int(cfg['sampling_rate'])
     params['audioformat'] = cfg['audioformat']
     params['audio_length'] = float(cfg['audio_length'])
@@ -299,6 +311,29 @@ def main_body():
 
     params['noisefilenames'] = glob.glob(os.path.join(noise_dir, params['audioformat']))
     shuffle(params['noisefilenames'])
+
+    if os.path.exists(rir_dir):
+        params['rirfilenames'] = glob.glob(os.path.join(rir_dir, params['audioformat']))
+        shuffle(params['rirfilenames'])
+
+
+    # Init augment
+    augment_param = {}
+    augment_param['sample_rate'] = params['fs']
+    augment_param['break_duration'] = float(cfg['break_duration'])
+    augment_param['break_ceil'] = int(cfg['break_ceil'])
+    augment_param['break_floor'] = int(cfg['break_floor'])
+    augment_param['clip_ceil'] = float(cfg['clip_ceil'])
+    augment_param['clip_floor'] = float(cfg['clip_floor'])
+    augment_param['gain_floor'] = int(cfg['gain_floor'])
+    augment_param['gain_ceil'] = int(cfg['gain_ceil'])
+    augment_param['frame_len'] = int(cfg['frame_len'])
+    augment_param['hop_len'] = int(cfg['hop_len'])
+    augment_param['segment_len'] = float(cfg['segment_len'])
+    augment_param['vol_ceil'] = int(cfg['vol_ceil'])
+    augment_param['vol_floor'] = int(cfg['vol_floor'])
+    random_augment = RandomAugment(augment_param, float(cfg['augment_prob']), int(cfg['augment_num']))
+    params['augment'] = random_augment
 
     # Invoke multiple processes and fan out calls to main_gen() to these processes
     global clean_counter, noise_counter
