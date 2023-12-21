@@ -3,11 +3,12 @@
 作者：Ryuk
 日期：2023年12月18日
 """
-
+import librosa
 import numpy as np
 import random
 import math
 import scipy.signal
+import soundfile as sf
 
 
 class BreakAugment:
@@ -94,13 +95,13 @@ class HowlingAugment:
         for i in range(sample_len):
             cur_frame = x[frame_start:frame_start+self.frame_len]
             windowed_frame = self.win * cur_frame
-            howling_out[:,frame_start:frame_start+self.frame_len] += windowed_frame
+            howling_out[frame_start:frame_start+self.frame_len] += windowed_frame
 
             conv_frame = np.convolve(windowed_frame.flatten(), self.IR.flatten(), mode="full")
 
             frame_start = frame_start + self.hop_len
             if frame_start+conv_len < sample_len:
-                x[:,frame_start:frame_start+conv_len] += conv_frame
+                x[frame_start:frame_start+conv_len] += conv_frame
             else:
                 break
 
@@ -158,7 +159,7 @@ class SpecAugment:
         self.b_hp = np.array([-2, 1])
 
     def _uni_rand(self):
-        return np.random.rand(1) - 0.5
+        return random.random() - 0.5
 
     def _rand_resp(self):
         a1 = 0.75 * self._uni_rand()
@@ -189,7 +190,7 @@ class VolumeAugment:
         return step_db
 
     def apply_gain(self, segments, db):
-        gain = np.pow(10.0, (0.05 * db))
+        gain = math.pow(10.0, (0.05 * db))
         segments = segments * gain
         return segments
 
@@ -198,7 +199,7 @@ class VolumeAugment:
         for i in range(step_db.shape[0]):
             start = i * self.segment_samples
             end = min((i+1) * self.segment_samples, x.shape[0])
-            x[:, start:end] = self.apply_gain(x[:, start:end], step_db[i])
+            x[start:end] = self.apply_gain(x[start:end], step_db[i])
         return x
 
 
@@ -240,10 +241,34 @@ class RandomAugment:
         else:
             ops = random.choices(self.op_list, self.augment_weight, k=self.augment_num)
 
-        print("do augment", ops)
         for op in ops:
             if type(op) == ReverbAugment or type(op) == HowlingAugment:
                 x = op(x, rir)
             else:
                 x = op(x)
         return x
+
+
+if __name__ == "__main__":
+    augment_param = {}
+    augment_param['sample_rate'] = 16000
+    augment_param['break_duration'] = 0.01
+    augment_param['break_ceil'] = 50
+    augment_param['break_floor'] = 10
+    augment_param['clip_ceil'] = 1.0
+    augment_param['clip_floor'] = 0.5
+    augment_param['gain_floor'] = 1
+    augment_param['gain_ceil'] = 10
+    augment_param['frame_len'] = 128
+    augment_param['hop_len'] = 64
+    augment_param['segment_len'] = 0.5
+    augment_param['vol_ceil'] = 10
+    augment_param['vol_floor'] = -10
+    random_augment = RandomAugment(augment_param, 0.9, 2)
+
+    clean, _ = librosa.load("./data/clean/SA1.wav", sr=16000)
+    noise, _ = librosa.load("./data/noise/1-172649-A.wav", sr=16000)
+    rir, _ = librosa.load("./data/rir/Room001-00001.wav", sr=16000)
+
+    for i in range(10):
+        random_augment(clean, rir)

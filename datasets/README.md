@@ -2,11 +2,11 @@
 Generating training data for speech enhancement.
 
 ## How to run
-1. Edit noisyspeech_synthesizer.cfg to include the paths to clean speech and noise directories. Also, specify the paths to the destination directories and store logs.
+1. Edit noisyspeech_synthesizer.cfg to include the paths to clean speech, noise directories and augmentation parameters. Also, specify the paths to the destination directories and store logs.
 2. Just run `python noisyspeech_synthesizer_multiprocessing.py`
 
 ## Augmentations
-The following augmentations are proposed in scse: 
+The following augmentations are proposed in noise-xorcist: 
 + **SpecAugment** was proposed in [RNNoise](https://github.com/xiph/rnnoisehttps://github.com/xiph/rnnoise), which is achieved by filtering the noise and speech signal independently for each training example using a second order filter  
 ![SpecAugment](https://github.com/Ryuk17/scse/blob/main/assets/spec_augment.png)
 
