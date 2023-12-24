@@ -18,26 +18,20 @@ _C = CN()
 
 _C.MODEL = CN()
 _C.MODEL.DEVICE = "cuda"
-_C.MODEL.NUM_CLASSES = 10
 
 # -----------------------------------------------------------------------------
 # INPUT
 # -----------------------------------------------------------------------------
 _C.INPUT = CN()
-# Size of the image during training
-_C.INPUT.SIZE_TRAIN = 32
-# Size of the image during test
-_C.INPUT.SIZE_TEST = 32
-# Minimum scale for the image during training
-_C.INPUT.MIN_SCALE_TRAIN = 0.5
-# Maximum scale for the image during test
-_C.INPUT.MAX_SCALE_TRAIN = 1.2
-# Random probability for image horizontal flip
-_C.INPUT.PROB = 0.5
-# Values to be used for image normalization
-_C.INPUT.PIXEL_MEAN = [0.1307, ]
-# Values to be used for image normalization
-_C.INPUT.PIXEL_STD = [0.3081, ]
+# Samplerate for wav
+_C.INPUT.SAMPLE_RATE = 16000
+# Frame length for wav
+_C.INPUT.FRAME_LEN = 128
+# Hop length for wav
+_C.INPUT.HOP_LEN = 128
+# FFT points for wav
+_C.INPUT.NFFT = 256
+
 
 # -----------------------------------------------------------------------------
 # Dataset
@@ -81,15 +75,15 @@ _C.SOLVER.WARMUP_METHOD = "linear"
 _C.SOLVER.CHECKPOINT_PERIOD = 10
 _C.SOLVER.LOG_PERIOD = 100
 
-# Number of images per batch
-# This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
+# Number of wav samples per batch
+# This is global, so if we have 8 GPUs and BATCH_SIZE = 16, each GPU will
 # see 2 images per batch
-_C.SOLVER.IMS_PER_BATCH = 16
+_C.SOLVER.BATCH_SIZE = 16
 
-# This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
+# This is global, so if we have 8 GPUs and BATCH_SIZE = 16, each GPU will
 # see 2 images per batch
 _C.TEST = CN()
-_C.TEST.IMS_PER_BATCH = 8
+_C.TEST.BATCH_SIZE = 8
 _C.TEST.WEIGHT = ""
 
 # ---------------------------------------------------------------------------- #

@@ -1,0 +1,57 @@
+DATA:
+  DATASET: spectrum
+  CLEAN_DIR: datasets/data/training_set/clean/
+  NOISY_DIR: datasets/data/training_set/noisy/
+  FORMAT: wav
+
+MODEL:
+  BACKBONE:
+    NAME: build_rnnoise_backbone
+    PRETRAIN: false
+
+  LOSSES:
+    NAME: ("RNNoiseLoss", )
+    CE:
+      EPSILON: 0.1
+      SCALE: 1.
+
+INPUT:
+  SAMPLE_RATE: 16000
+  FRAME_LEN: 128
+  HOP_LEN: 128
+  NFFT: 256
+  WIN_TYPE: hanning
+  NORMAL: True
+
+
+DATALOADER:
+  SAMPLER_TRAIN: NaiveIdentitySampler
+  NUM_INSTANCE: 4
+  NUM_WORKERS: 8
+
+SOLVER:
+  AMP:
+    ENABLED: True
+  OPT: Adam
+  MAX_EPOCH: 120
+  BASE_LR: 0.00035
+  WEIGHT_DECAY: 0.0005
+  WEIGHT_DECAY_NORM: 0.0005
+  BATCH_SIZE: 64
+
+  SCHED: MultiStepLR
+  STEPS: [ 40, 90 ]
+  GAMMA: 0.1
+
+  WARMUP_FACTOR: 0.1
+  WARMUP_ITERS: 2000
+
+  CHECKPOINT_PERIOD: 30
+
+TEST:
+  EVAL_PERIOD: 30
+  IMS_PER_BATCH: 128
+
+CUDNN_BENCHMARK: True
+
+OUTPUT_DIR: runs/rnnoise/
