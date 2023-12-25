@@ -8,6 +8,7 @@ MODEL:
   BACKBONE:
     NAME: build_rnnoise_backbone
     PRETRAIN: false
+    NFFT: 256
 
   LOSSES:
     NAME: ("RNNoiseLoss", )

@@ -4,9 +4,20 @@
 @contact: sherlockliao01@gmail.com
 """
 
-from .example_model import ResNet18
+from . import losses
+from .backbones import (
+    BACKBONE_REGISTRY,
+    build_resnet_backbone,
+    build_backbone,
+)
+from .heads import (
+    REID_HEADS_REGISTRY,
+    build_heads,
+    EmbeddingHead,
+)
+from .meta_arch import (
+    build_model,
+    META_ARCH_REGISTRY,
+)
 
-
-def build_model(cfg):
-    model = ResNet18(cfg.MODEL.NUM_CLASSES)
-    return model
+__all__ = [k for k in globals().keys() if not k.startswith("_")]
