@@ -5,6 +5,7 @@
 
 
 import torch
+import torch.nn.functional as F
 
 
 def mse_loss(ref, inf):
@@ -28,3 +29,11 @@ def mse_loss(ref, inf):
             "Invalid input shape: ref={}, inf={}".format(ref.shape, inf.shape)
         )
     return mseloss
+
+
+def weighted_mse_loss(y_ms, noise_ms, vad, y_hat, alpha):
+    vad_bin = torch.unsqueeze(vad, dim=1).expand_as(y_ms)
+    loss_speech = F.mse_loss(y_ms[vad_bin], (y_hat * y_ms)[vad_bin])
+    loss_noise = F.mse_loss(torch.zeros_like(y_hat), y_hat * noise_ms)
+    loss_val = alpha * loss_speech + (1 - alpha) * loss_noise
+    return loss_val

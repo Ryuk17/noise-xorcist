@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 from torch.utils.data import Sampler
 
-from fastreid.utils import comm
+from noisexorcist.utils import comm
 
 
 class TrainingSampler(Sampler):

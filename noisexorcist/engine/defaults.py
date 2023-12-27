@@ -30,6 +30,7 @@ from noisexorcist.utils.events import CommonMetricPrinter, JSONWriter, Tensorboa
 from noisexorcist.utils.file_io import PathManager
 from noisexorcist.utils.logger import setup_logger
 from .train_loop import TrainerBase, AMPTrainer, SimpleTrainer
+from . import hooks
 
 __all__ = ["default_argument_parser", "default_setup", "DefaultPredictor", "DefaultTrainer"]
 
@@ -118,17 +119,14 @@ def default_setup(cfg, args):
 class DefaultPredictor:
     """
     Create a simple end-to-end predictor with the given config.
-    The predictor takes an BGR image, resizes it to the specified resolution,
+    The predictor takes an wav in float32.
     runs the model and produces a dict of predictions.
     This predictor takes care of model loading and input preprocessing for you.
     If you'd like to do anything more fancy, please refer to its source code
     as examples to build and use the model manually.
     Attributes:
     Examples:
-    .. code-block:: python
-        pred = DefaultPredictor(cfg)
-        inputs = cv2.imread("input.jpg")
-        outputs = pred(inputs)
+
     """
 
     def __init__(self, cfg):
@@ -140,14 +138,14 @@ class DefaultPredictor:
 
         Checkpointer(self.model).load(cfg.MODEL.WEIGHTS)
 
-    def __call__(self, image):
+    def __call__(self, feature):
         """
         Args:
-            image (torch.tensor): an image tensor of shape (B, C, H, W).
+            feature (torch.tensor):  tensor of wav feature.
         Returns:
             predictions (torch.tensor): the output features of the model
         """
-        inputs = {"images": image.to(self.model.device)}
+        inputs = {"wav": feature.to(self.model.device)}
         with torch.no_grad():  # https://github.com/sphinx-doc/sphinx/issues/4258
             predictions = self.model(inputs)
         return predictions.cpu()
@@ -396,7 +394,7 @@ class DefaultTrainer(TrainerBase):
         """
         logger = logging.getLogger(__name__)
         logger.info("Prepare training set")
-        return build_reid_train_loader(cfg, combineall=cfg.DATASETS.COMBINEALL)
+        return build_se_train_loader(cfg, combineall=cfg.DATASETS.COMBINEALL)
 
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):
@@ -406,12 +404,12 @@ class DefaultTrainer(TrainerBase):
         It now calls :func:`noisexorcist.data.build_reid_test_loader`.
         Overwrite it if you'd like a different data loader.
         """
-        return build_reid_test_loader(cfg, dataset_name=dataset_name)
+        return build_se_test_loader(cfg, dataset_name=dataset_name)
 
     @classmethod
     def build_evaluator(cls, cfg, dataset_name, output_dir=None):
         data_loader, num_query = cls.build_test_loader(cfg, dataset_name)
-        return data_loader, ReidEvaluator(cfg, num_query, output_dir)
+        return data_loader, SeEvaluator(cfg, num_query, output_dir)
 
     @classmethod
     def test(cls, cfg, model):

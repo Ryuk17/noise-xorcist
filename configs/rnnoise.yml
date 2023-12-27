@@ -23,11 +23,10 @@ INPUT:
   NFFT: 256
   WIN_TYPE: hanning
   NORMAL: True
+  FEATURES: ("LogPowerSpectrum",)
 
 
 DATALOADER:
-  SAMPLER_TRAIN: NaiveIdentitySampler
-  NUM_INSTANCE: 4
   NUM_WORKERS: 8
 
 SOLVER:

@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@author:  liaoxingyu
-@contact: sherlockliao01@gmail.com
+@author:  Ryuk
+@contact: jeryuklau@gmail.com
 """
 
 import torch
@@ -24,9 +24,6 @@ class Baseline(nn.Module):
             self,
             *,
             backbone,
-            heads,
-            pixel_mean,
-            pixel_std,
             loss_kwargs=None
     ):
         """
@@ -34,96 +31,60 @@ class Baseline(nn.Module):
 
         Args:
             backbone:
-            heads:
-            pixel_mean:
-            pixel_std:
         """
         super().__init__()
         # backbone
         self.backbone = backbone
-
-        # head
-        self.heads = heads
-
         self.loss_kwargs = loss_kwargs
-
-        self.register_buffer('pixel_mean', torch.Tensor(pixel_mean).view(1, -1, 1, 1), False)
-        self.register_buffer('pixel_std', torch.Tensor(pixel_std).view(1, -1, 1, 1), False)
 
     @classmethod
     def from_config(cls, cfg):
         backbone = build_backbone(cfg)
         return {
             'backbone': backbone,
+            'input_feats': cfg.INPUT.FEATURES,
             'loss_kwargs':
                 {
                     # loss name
                     'loss_names': cfg.MODEL.LOSSES.NAME,
 
                     # loss hyperparameters
-                    'ce': {
-                        'eps': cfg.MODEL.LOSSES.CE.EPSILON,
-                        'alpha': cfg.MODEL.LOSSES.CE.ALPHA,
-                        'scale': cfg.MODEL.LOSSES.CE.SCALE
+                    'mse': {
+                        'eps': cfg.MODEL.LOSSES.MSE.EPSILON,
                     },
-                    'tri': {
-                        'margin': cfg.MODEL.LOSSES.TRI.MARGIN,
-                        'norm_feat': cfg.MODEL.LOSSES.TRI.NORM_FEAT,
-                        'hard_mining': cfg.MODEL.LOSSES.TRI.HARD_MINING,
-                        'scale': cfg.MODEL.LOSSES.TRI.SCALE
+                    'wmse': {
+                        'alpha': cfg.MODEL.LOSSES.WMSE.ALPHA,
                     },
-                    'circle': {
-                        'margin': cfg.MODEL.LOSSES.CIRCLE.MARGIN,
-                        'gamma': cfg.MODEL.LOSSES.CIRCLE.GAMMA,
-                        'scale': cfg.MODEL.LOSSES.CIRCLE.SCALE
+                    'snr': {
+                        'eps': cfg.MODEL.LOSSES.SNR.EPS,
                     },
-                    'cosface': {
-                        'margin': cfg.MODEL.LOSSES.COSFACE.MARGIN,
-                        'gamma': cfg.MODEL.LOSSES.COSFACE.GAMMA,
-                        'scale': cfg.MODEL.LOSSES.COSFACE.SCALE
+                    'ci_sdr': {
+                        'filter_length': cfg.MODEL.LOSSES.CI_SDR.FILTER_LENGTH,
                     }
                 }
         }
 
-    @property
-    def device(self):
-        return self.pixel_mean.device
-
     def forward(self, batched_inputs):
-        images = self.preprocess_image(batched_inputs)
-        features = self.backbone(images)
+        inputs = self.preprocess_inputs(batched_inputs)
 
+        outputs = self.backbone(inputs)
         if self.training:
-            assert "targets" in batched_inputs, "Person ID annotation are missing in training!"
-            targets = batched_inputs["targets"]
-
-            # PreciseBN flag, When do preciseBN on different dataset, the number of classes in new dataset
-            # may be larger than that in the original dataset, so the circle/arcface will
-            # throw an error. We just set all the targets to 0 to avoid this problem.
-            if targets.sum() < 0: targets.zero_()
-
-            outputs = self.heads(features, targets)
-            losses = self.losses(outputs, targets)
+            losses = self.losses(outputs, inputs)
             return losses
         else:
-            outputs = self.heads(features)
             return outputs
 
-    def preprocess_image(self, batched_inputs):
+
+    def preprocess_inputs(self, batched_inputs):
         """
-        Normalize and batch the input images.
+        get the input features.
         """
-        if isinstance(batched_inputs, dict):
-            images = batched_inputs['images']
-        elif isinstance(batched_inputs, torch.Tensor):
-            images = batched_inputs
-        else:
-            raise TypeError("batched_inputs must be dict or torch.Tensor, but get {}".format(type(batched_inputs)))
+        x_stft, y_stft, x_lps, y_lps, x_ms, y_ms, noise_ms, vad = batched_inputs
 
         images.sub_(self.pixel_mean).div_(self.pixel_std)
         return images
 
-    def losses(self, outputs, gt_labels):
+    def losses(self, outputs, batched_inputs):
         """
         Compute loss from modeling's outputs, the loss function input arguments
         must be the same as the outputs of the model forwarding.

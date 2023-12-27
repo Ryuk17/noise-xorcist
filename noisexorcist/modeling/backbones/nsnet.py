@@ -57,8 +57,8 @@ def build_nsnet_backbone(cfg):
     pretrain = cfg.MODEL.BACKBONE.PRETRAIN
     pretrain_path = cfg.MODEL.BACKBONE.PRETRAIN_PATH
     nfft = cfg.MODEL.BACKBONE.NFFT
-    n_gru_layers = cfg.MODEL.BACKBONE.GRU_LAYERS
-    gru_dropout = cfg.MODEL.BACKBONE.GRU_DROPOUT
+    n_gru_layers = cfg.MODEL.BACKBONE.NSNET.GRU_LAYERS
+    gru_dropout = cfg.MODEL.BACKBONE.NSNET.GRU_DROPOUT
     # fmt: on
 
     model = NSNetModel(nfft, n_gru_layers, gru_dropout)
