@@ -82,7 +82,7 @@ class Spectrum(Dataset):
         y_lps = LogTransform()(y_ps)
 
         x_ms = x_ps.sqrt()
-        y_ms = y_stft.pow(2).sum(-1).sqrt()
+        y_ms = y_ps.sqrt()
 
         noise_ms = (x_stft - y_stft).pow(2).sum(-1).sqrt()
 
@@ -110,9 +110,30 @@ class Spectrum(Dataset):
             x_lps = torch.stack(frames, dim=0).transpose(0, 1)   # (frequency, time)
 
         if self.mode == "train":
-            return x_stft, y_stft, x_lps, y_lps, x_ms, y_ms, noise_ms, vad
+            train_dict = {
+                "x_stft": x_stft,
+                "y_stft": y_stft,
+                "x_lps": x_lps,
+                "y_lps": y_lps,
+                "x_ms": x_ms,
+                "y_ms": y_ms,
+                "noise_ms": noise_ms,
+                "vad": vad
+            }
+            return train_dict
         if self.mode == "test":
-            return noisy_waveform.view(-1), clean_waveform.view(-1), x_stft, y_stft, x_lps, y_lps, x_ms, y_ms, vad
+            test_dict = {
+                "noisy_waveform": noisy_waveform.view(-1),
+                "clean_waveform": clean_waveform.view(-1),
+                "x_stft": x_stft,
+                "y_stft": y_stft,
+                "x_lps": x_lps,
+                "y_lps": y_lps,
+                "x_ms": x_ms,
+                "y_ms": y_ms,
+                "vad": vad
+            }
+            return test_dict
 
     def __moving_average(self, a, n=3):
         ret = torch.cumsum(a, dim=0)

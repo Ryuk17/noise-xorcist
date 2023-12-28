@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@author:  l1aoxingyu
-@contact: sherlockliao01@gmail.com
+@author:  Ryuk
+@contact: jeryuklau@gmail.com
 """
 
 import logging
@@ -9,14 +9,13 @@ import logging
 import torch
 import torch.nn.functional as F
 
-from fastreid.config import get_cfg
-from fastreid.modeling.meta_arch import META_ARCH_REGISTRY, build_model, Baseline
-from fastreid.utils.checkpoint import Checkpointer
+from noisexorcist.config import get_cfg
+from noisexorcist.modeling.meta_arch import build_model, Baseline
+from noisexorcist.utils.checkpoint import Checkpointer
 
 logger = logging.getLogger(__name__)
 
 
-@META_ARCH_REGISTRY.register()
 class Distiller(Baseline):
     def __init__(self, cfg):
         super().__init__(cfg)

@@ -10,6 +10,7 @@ from torch import nn
 from noisexorcist.config import configurable
 from noisexorcist.modeling.backbones import build_backbone
 from noisexorcist.modeling.losses import *
+from .process import extract_inputs, extract_groundtruth
 
 
 class Baseline(nn.Module):
@@ -24,6 +25,8 @@ class Baseline(nn.Module):
             self,
             *,
             backbone,
+            input_type,
+            output_type,
             loss_kwargs=None
     ):
         """
@@ -36,19 +39,29 @@ class Baseline(nn.Module):
         # backbone
         self.backbone = backbone
         self.loss_kwargs = loss_kwargs
+        self.input_type = input_type
+        self.output_type = output_type
 
     @classmethod
     def from_config(cls, cfg):
         backbone = build_backbone(cfg)
         return {
             'backbone': backbone,
-            'input_feats': cfg.INPUT.FEATURES,
+            'input_type': cfg.MODEL.INPUT_TYPE,
+            'output_type': cfg.MODEL.OUTPUT_TYPE,
             'loss_kwargs':
                 {
                     # loss name
                     'loss_names': cfg.MODEL.LOSSES.NAME,
 
                     # loss hyperparameters
+                    'ce': {
+                        'eps': cfg.MODEL.LOSSES.CE.EPSILON,
+                        'alpha': cfg.MODEL.LOSSES.CE.ALPHA,
+                        'scale': cfg.MODEL.LOSSES.CE.SCALE,
+                        'index': cfg.MODEL.LOSSES.CE.INDEX,
+                        'gt_type': cfg.MODEL.LOSSES.CE.GT_TYPE
+                    },
                     'mse': {
                         'eps': cfg.MODEL.LOSSES.MSE.EPSILON,
                     },
@@ -77,27 +90,19 @@ class Baseline(nn.Module):
 
     def preprocess_inputs(self, batched_inputs):
         """
-        get the input features.
+        get the input of model.
         """
-        x_stft, y_stft, x_lps, y_lps, x_ms, y_ms, noise_ms, vad = batched_inputs
+        inputs = extract_inputs(batched_inputs, self.input_type)
+        return inputs
 
-        images.sub_(self.pixel_mean).div_(self.pixel_std)
-        return images
 
-    def losses(self, outputs, batched_inputs):
+    def losses(self, batched_outputs, batched_inputs):
         """
         Compute loss from modeling's outputs, the loss function input arguments
         must be the same as the outputs of the model forwarding.
         """
         # model predictions
-        # fmt: off
-        pred_class_logits = outputs['pred_class_logits'].detach()
-        cls_outputs       = outputs['cls_outputs']
-        pred_features     = outputs['features']
-        # fmt: on
-
-        # Log prediction accuracy
-        log_accuracy(pred_class_logits, gt_labels)
+        outputs = self.preprocess_outputs(batched_outputs)
 
         loss_dict = {}
         loss_names = self.loss_kwargs['loss_names']
@@ -105,38 +110,11 @@ class Baseline(nn.Module):
         if 'CrossEntropyLoss' in loss_names:
             ce_kwargs = self.loss_kwargs.get('ce')
             loss_dict['loss_cls'] = cross_entropy_loss(
-                cls_outputs,
-                gt_labels,
+                outputs[ce_kwargs.get('index')],
+                extract_groundtruth(batched_inputs, ce_kwargs.get('gt_type')),
                 ce_kwargs.get('eps'),
-                ce_kwargs.get('alpha')
+                ce_kwargs.get('alpha'),
             ) * ce_kwargs.get('scale')
 
-        if 'TripletLoss' in loss_names:
-            tri_kwargs = self.loss_kwargs.get('tri')
-            loss_dict['loss_triplet'] = triplet_loss(
-                pred_features,
-                gt_labels,
-                tri_kwargs.get('margin'),
-                tri_kwargs.get('norm_feat'),
-                tri_kwargs.get('hard_mining')
-            ) * tri_kwargs.get('scale')
-
-        if 'CircleLoss' in loss_names:
-            circle_kwargs = self.loss_kwargs.get('circle')
-            loss_dict['loss_circle'] = pairwise_circleloss(
-                pred_features,
-                gt_labels,
-                circle_kwargs.get('margin'),
-                circle_kwargs.get('gamma')
-            ) * circle_kwargs.get('scale')
-
-        if 'Cosface' in loss_names:
-            cosface_kwargs = self.loss_kwargs.get('cosface')
-            loss_dict['loss_cosface'] = pairwise_cosface(
-                pred_features,
-                gt_labels,
-                cosface_kwargs.get('margin'),
-                cosface_kwargs.get('gamma'),
-            ) * cosface_kwargs.get('scale')
 
         return loss_dict

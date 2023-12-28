@@ -11,10 +11,18 @@ MODEL:
     NFFT: 256
 
   LOSSES:
-    NAME: ("RNNoiseLoss", )
+    NAME: ("MagMseLoss", "CrossEntropyLoss", )
+
+    MSE:
+      SCALE: 1.
+      INDEX: 0
+      GT_TYPE: MASK
+
     CE:
       EPSILON: 0.1
       SCALE: 1.
+      INDEX: 1
+      GT_TYPE: VAD
 
 INPUT:
   SAMPLE_RATE: 16000
@@ -23,7 +31,7 @@ INPUT:
   NFFT: 256
   WIN_TYPE: hanning
   NORMAL: True
-  FEATURES: ("LogPowerSpectrum",)
+  INPUT_TYPE: ("LogPowerSpectrum",)
 
 
 DATALOADER:
