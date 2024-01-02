@@ -10,7 +10,6 @@ from torch import nn
 from noisexorcist.config import configurable
 from noisexorcist.modeling.backbones import build_backbone
 from noisexorcist.modeling.losses import *
-from .process import extract_inputs, extract_groundtruth
 
 
 class Baseline(nn.Module):
@@ -56,17 +55,17 @@ class Baseline(nn.Module):
 
                     # loss hyperparameters
                     'ce': {
-                        'eps': cfg.MODEL.LOSSES.CE.EPSILON,
+                        'eps': cfg.MODEL.LOSSES.CE.EPS,
                         'alpha': cfg.MODEL.LOSSES.CE.ALPHA,
                         'scale': cfg.MODEL.LOSSES.CE.SCALE,
                         'index': cfg.MODEL.LOSSES.CE.INDEX,
                         'gt_type': cfg.MODEL.LOSSES.CE.GT_TYPE
                     },
-                    'mse': {
-                        'eps': cfg.MODEL.LOSSES.MSE.EPSILON,
+                    'mmse': {
+                        'eps': cfg.MODEL.LOSSES.MMSE.EPS,
                     },
-                    'wmse': {
-                        'alpha': cfg.MODEL.LOSSES.WMSE.ALPHA,
+                    'wsd': {
+                        'alpha': cfg.MODEL.LOSSES.WSD.ALPHA,
                     },
                     'snr': {
                         'eps': cfg.MODEL.LOSSES.SNR.EPS,
@@ -87,14 +86,20 @@ class Baseline(nn.Module):
         else:
             return outputs
 
+    def extract_inputs(self, batched_inputs, inputs_type):
+        if inputs_type == "LogPowerSpectrum":
+            return batched_inputs["x_lps"]
+        elif inputs_type == "MagnitudeSpectrum":
+            return batched_inputs["x_ms"]
+        else:
+            raise NotImplementedError
 
     def preprocess_inputs(self, batched_inputs):
         """
         get the input of model.
         """
-        inputs = extract_inputs(batched_inputs, self.input_type)
+        inputs = self.extract_inputs(batched_inputs, self.input_type)
         return inputs
-
 
     def losses(self, batched_outputs, batched_inputs):
         """
@@ -111,10 +116,32 @@ class Baseline(nn.Module):
             ce_kwargs = self.loss_kwargs.get('ce')
             loss_dict['loss_cls'] = cross_entropy_loss(
                 outputs[ce_kwargs.get('index')],
-                extract_groundtruth(batched_inputs, ce_kwargs.get('gt_type')),
+                batched_inputs,
                 ce_kwargs.get('eps'),
                 ce_kwargs.get('alpha'),
             ) * ce_kwargs.get('scale')
 
+        if 'MaskMseLoss' in loss_names:
+            mmse_kwargs = self.loss_kwargs.get('mmse')
+            loss_dict['loss_mmse'] = mask_mse_loss(
+                outputs[mmse_kwargs.get('index')],
+                batched_inputs,
+            ) * mmse_kwargs.get('scale')
+
+        if 'WeightedSpeechDistortionLoss' in loss_names:
+            wsd_kwargs = self.loss_kwargs.get('wsd')
+            loss_dict['loss_wsd'] = weighted_speech_loss(
+                outputs[wsd_kwargs.get('index')],
+                batched_inputs,
+                wsd_kwargs.get('alpha'),
+            ) * wsd_kwargs.get('scale')
+
+        if 'NegativeSnrLoss' in loss_names:
+            snr_kwargs = self.loss_kwargs.get('snr')
+            loss_dict['loss_wsd'] = mask_mse_loss(
+                outputs[wsd_kwargs.get('index')],
+                batched_inputs,
+                wsd_kwargs.get('alpha'),
+            ) * wsd_kwargs.get('scale')
 
         return loss_dict
