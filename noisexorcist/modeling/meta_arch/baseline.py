@@ -139,9 +139,9 @@ class Baseline(nn.Module):
         if 'NegativeSnrLoss' in loss_names:
             snr_kwargs = self.loss_kwargs.get('snr')
             loss_dict['loss_wsd'] = mask_mse_loss(
-                outputs[wsd_kwargs.get('index')],
+                outputs[snr_kwargs.get('index')],
                 batched_inputs,
-                wsd_kwargs.get('alpha'),
-            ) * wsd_kwargs.get('scale')
+                snr_kwargs.get('alpha'),
+            ) * snr_kwargs.get('scale')
 
         return loss_dict

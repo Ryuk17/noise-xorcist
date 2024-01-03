@@ -6,22 +6,18 @@ DATA:
 
 MODEL:
   BACKBONE:
-    NAME: build_rnnoise_backbone
+    NAME: build_nsnet_backbone
     PRETRAIN: false
     NFFT: 256
 
   LOSSES:
-    NAME: ("MaskMseLoss", "CrossEntropyLoss", )
+    NAME: ("WeightedSpeechDistortionLoss",)
 
-    MSE:
+    WSD:
       SCALE: 1.
       INDEX: 0
+      ALPHA: 0.4
       EPS: 1e-7
-
-    CE:
-      SCALE: 1.
-      INDEX: 1
-      EPS: 0.1
 
 INPUT:
   SAMPLE_RATE: 16000
@@ -34,11 +30,11 @@ INPUT:
 
 
 DATALOADER:
-  NUM_WORKERS: 8
+  NUM_WORKERS: 4
 
 SOLVER:
   AMP:
-    ENABLED: True
+    ENABLED: False
   OPT: Adam
   MAX_EPOCH: 120
   BASE_LR: 0.00035
@@ -61,4 +57,4 @@ TEST:
 
 CUDNN_BENCHMARK: True
 
-OUTPUT_DIR: runs/rnnoise/
+OUTPUT_DIR: runs/nsnet/
