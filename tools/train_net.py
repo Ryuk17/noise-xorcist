@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@author:  xingyu liao
-@contact: sherlockliao01@gmail.com
+@author:  Ryuk
+@contact: jeryuklau@gmail.com
 """
 
 import logging

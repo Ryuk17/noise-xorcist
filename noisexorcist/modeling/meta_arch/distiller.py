@@ -10,7 +10,8 @@ import torch
 import torch.nn.functional as F
 
 from noisexorcist.config import get_cfg
-from noisexorcist.modeling.meta_arch import build_model, Baseline
+from noisexorcist.modeling.meta_arch import build_model
+from noisexorcist.modeling.meta_arch.baseline import Baseline
 from noisexorcist.utils.checkpoint import Checkpointer
 
 logger = logging.getLogger(__name__)

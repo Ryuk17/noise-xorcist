@@ -1,5 +1,5 @@
-DATA:
-  DATASET: spectrum
+DATASETS:
+  PREPROCESS: spectrum
   CLEAN_DIR: datasets/data/training_set/clean/
   NOISY_DIR: datasets/data/training_set/noisy/
   FORMAT: wav
@@ -8,7 +8,6 @@ MODEL:
   BACKBONE:
     NAME: build_nsnet_backbone
     PRETRAIN: false
-    NFFT: 256
 
   LOSSES:
     NAME: ("WeightedSpeechDistortionLoss",)
@@ -26,7 +25,7 @@ INPUT:
   NFFT: 256
   WIN_TYPE: hanning
   NORMAL: True
-  INPUT_TYPE: ("LogPowerSpectrum",)
+  FEAT_TYPE: ("LogPowerSpectrum",)
 
 
 DATALOADER:
@@ -53,8 +52,8 @@ SOLVER:
 
 TEST:
   EVAL_PERIOD: 30
-  IMS_PER_BATCH: 128
+  BATCH_SIZE: 128
 
 CUDNN_BENCHMARK: True
 
-OUTPUT_DIR: runs/nsnet/
+OUTPUT_DIR: ../runs/nsnet/

@@ -4,7 +4,7 @@
 @contact: jeryuklau@gmail.com
 """
 
-from spectrums import Spectrum
+from .spectrums import Spectrum
 
 
 
@@ -19,6 +19,6 @@ def build_dataset(cfg, is_train, verbose=False, **kwargs):
     else:
         mode = "test"
 
-    dataset = cfg['DATA']['DATASET']
+    dataset = cfg['DATASET']['PREPROCESS']
     return __all__[dataset](cfg, mode, verbose, **kwargs)
 

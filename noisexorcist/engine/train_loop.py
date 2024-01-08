@@ -13,9 +13,9 @@ import numpy as np
 import torch
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
-import fastreid.utils.comm as comm
-from fastreid.utils.events import EventStorage, get_event_storage
-from fastreid.utils.params import ContiguousParams
+import noisexorcist.utils.comm as comm
+from noisexorcist.utils.events import EventStorage, get_event_storage
+from noisexorcist.utils.params import ContiguousParams
 
 __all__ = ["HookBase", "TrainerBase", "SimpleTrainer"]
 

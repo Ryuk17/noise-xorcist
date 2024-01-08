@@ -13,14 +13,14 @@ import torch
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel
 
-from fastreid.evaluation.testing import flatten_results_dict
-from fastreid.solver import optim
-from fastreid.utils import comm
-from fastreid.utils.checkpoint import PeriodicCheckpointer as _PeriodicCheckpointer
-from fastreid.utils.events import EventStorage, EventWriter, get_event_storage
-from fastreid.utils.file_io import PathManager
-from fastreid.utils.precision_bn import update_bn_stats, get_bn_modules
-from fastreid.utils.timer import Timer
+from noisexorcist.evaluation.testing import flatten_results_dict
+from noisexorcist.solver import optim
+from noisexorcist.utils import comm
+from noisexorcist.utils.checkpoint import PeriodicCheckpointer as _PeriodicCheckpointer
+from noisexorcist.utils.events import EventStorage, EventWriter, get_event_storage
+from noisexorcist.utils.file_io import PathManager
+from noisexorcist.utils.precision_bn import update_bn_stats, get_bn_modules
+from noisexorcist.utils.timer import Timer
 from .train_loop import HookBase
 
 __all__ = [

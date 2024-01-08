@@ -18,6 +18,19 @@ _C = CN()
 
 _C.MODEL = CN()
 _C.MODEL.DEVICE = "cuda"
+_C.MODEL.META_ARCHITECTURE = "Baseline"
+
+# ---------------------------------------------------------------------------- #
+# Backbone options
+# ---------------------------------------------------------------------------- #
+_C.MODEL.BACKBONE = CN()
+
+_C.MODEL.BACKBONE.NAME = "build_nsnet_backbone"
+# If use pretrain model
+_C.MODEL.BACKBONE.PRETRAIN = False
+# Pretrain model path
+_C.MODEL.BACKBONE.PRETRAIN_PATH = ''
+
 
 # -----------------------------------------------------------------------------
 # INPUT
@@ -31,16 +44,26 @@ _C.INPUT.FRAME_LEN = 128
 _C.INPUT.HOP_LEN = 128
 # FFT points for wav
 _C.INPUT.NFFT = 256
+# FFT window type
+_C.INPUT.WIN_TYPE = "hanning"
+# Spectrum normalization
+_C.INPUT.NORMAL = False
+# Input feature type, the order is the input order of neural network
+_C.INPUT.FEAT_TYPE = ("LogPowerSpectrum",)
 
 
 # -----------------------------------------------------------------------------
 # Dataset
 # -----------------------------------------------------------------------------
 _C.DATASETS = CN()
-# List of the dataset names for training, as present in paths_catalog.py
-_C.DATASETS.TRAIN = ()
-# List of the dataset names for testing, as present in paths_catalog.py
-_C.DATASETS.TEST = ()
+#
+_C.DATASETS.PREPROCESS = "spectrum"
+# clean audio dir
+_C.DATASETS.CLEAN_DIR = "datasets/data/training_set/clean/"
+# noisy audio dir
+_C.DATASETS.NOISY_DIR = "datasets/data/training_set/noisy/"
+# audio format
+_C.DATASETS.FORMAT = "wav"
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -141,8 +164,10 @@ _C.SOLVER.CLIP_GRADIENTS.NORM_TYPE = 2.0
 # ---------------------------------------------------------------------------- #
 # see 2 wavs per batch
 _C.TEST = CN()
+_C.TEST.METRIC = "snr"
 _C.TEST.BATCH_SIZE = 8
 _C.TEST.WEIGHT = ""
+_C.TEST.EVAL_PERIOD = 20
 
 
 # ---------------------------------------------------------------------------- #
@@ -158,11 +183,14 @@ _C.MODEL.LOSSES.CE = CN()
 _C.MODEL.LOSSES.CE.EPSILON = 0.0
 _C.MODEL.LOSSES.CE.ALPHA = 0.2
 _C.MODEL.LOSSES.CE.SCALE = 1.0
+_C.MODEL.LOSSES.CE.INDEX = 0
 
 # Weighted Speech Distortion Loss options
 _C.MODEL.LOSSES.WSD = CN()
 _C.MODEL.LOSSES.WSD.ALPHA = 0.4
 _C.MODEL.LOSSES.WSD.SCALE = 1.0
+_C.MODEL.LOSSES.WSD.INDEX = 0
+_C.MODEL.LOSSES.WSD.EPS = 1e-7
 
 # -----------------------------------------------------------------------------
 # KNOWLEDGE DISTILLATION
@@ -178,7 +206,7 @@ _C.KD.EMA.MOMENTUM = 0.999
 # ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #
-_C.OUTPUT_DIR = "./runs/"
+_C.OUTPUT_DIR = "../runs/"
 
 
 # Benchmark different cudnn algorithms.
