@@ -2,7 +2,7 @@
 
 This directory contains:
 
-1. The scripts that convert a fastreid model to Caffe/ONNX/TRT format.
+1. The scripts that convert a noisexorcist model to Caffe/ONNX/TRT format.
 
 2. The exmpales that load a R50 baseline model in Caffe/ONNX/TRT and run inference.
 

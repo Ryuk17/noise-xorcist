@@ -30,7 +30,12 @@ _C.MODEL.BACKBONE.NAME = "build_nsnet_backbone"
 _C.MODEL.BACKBONE.PRETRAIN = False
 # Pretrain model path
 _C.MODEL.BACKBONE.PRETRAIN_PATH = ''
+# Input dimension
+_C.MODEL.BACKBONE.INPUT_DIM = 129
 
+_C.MODEL.BACKBONE.NSNET = CN()
+_C.MODEL.BACKBONE.NSNET.GRU_LAYERS = 3
+_C.MODEL.BACKBONE.NSNET.GRU_DROPOUT = 0.2
 
 # -----------------------------------------------------------------------------
 # INPUT
@@ -184,6 +189,7 @@ _C.MODEL.LOSSES.CE.EPSILON = 0.0
 _C.MODEL.LOSSES.CE.ALPHA = 0.2
 _C.MODEL.LOSSES.CE.SCALE = 1.0
 _C.MODEL.LOSSES.CE.INDEX = 0
+_C.MODEL.LOSSES.CE.EPS = 0
 
 # Weighted Speech Distortion Loss options
 _C.MODEL.LOSSES.WSD = CN()
@@ -191,6 +197,18 @@ _C.MODEL.LOSSES.WSD.ALPHA = 0.4
 _C.MODEL.LOSSES.WSD.SCALE = 1.0
 _C.MODEL.LOSSES.WSD.INDEX = 0
 _C.MODEL.LOSSES.WSD.EPS = 1e-7
+
+# MMSE Loss options
+_C.MODEL.LOSSES.MMSE = CN()
+_C.MODEL.LOSSES.MMSE.EPS = 1e-7
+
+# SNR Loss options
+_C.MODEL.LOSSES.SNR = CN()
+_C.MODEL.LOSSES.SNR.EPS = 1e-7
+
+# CI_SDR Loss options
+_C.MODEL.LOSSES.CI_SDR = CN()
+_C.MODEL.LOSSES.CI_SDR.FILTER_LENGTH = 512
 
 # -----------------------------------------------------------------------------
 # KNOWLEDGE DISTILLATION

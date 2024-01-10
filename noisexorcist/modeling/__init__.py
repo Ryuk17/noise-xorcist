@@ -1,12 +1,12 @@
 # encoding: utf-8
 """
-@author:  Ryuk
-@contact: jeryuklau@gmail.com
+@author:  sherlock
+@contact: sherlockliao01@gmail.com
 """
 
 from . import losses
 from .backbones import (
-    build_backbone,
+    build_nsnet_backbone,
 )
 
 from .meta_arch import (

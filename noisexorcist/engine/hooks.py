@@ -189,7 +189,7 @@ class PeriodicWriter(HookBase):
 
 class PeriodicCheckpointer(_PeriodicCheckpointer, HookBase):
     """
-    Same as :class:`fastreid.utils.checkpoint.PeriodicCheckpointer`, but as a hook.
+    Same as :class:`noisexorcist.utils.checkpoint.PeriodicCheckpointer`, but as a hook.
     Note that when used as a hook,
     it is unable to save additional data other than what's defined
     by the given `checkpointer`.

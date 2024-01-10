@@ -8,6 +8,7 @@ MODEL:
   BACKBONE:
     NAME: build_nsnet_backbone
     PRETRAIN: false
+    INPUT_DIM: 129
 
   LOSSES:
     NAME: ("WeightedSpeechDistortionLoss",)

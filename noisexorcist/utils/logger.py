@@ -33,7 +33,7 @@ class _ColorfulFormatter(logging.Formatter):
 
 @functools.lru_cache()  # so that calling setup_logger multiple times won't add many handlers
 def setup_logger(
-        output=None, distributed_rank=0, *, color=True, name="fastreid", abbrev_name=None
+        output=None, distributed_rank=0, *, color=True, name="noisexorcist", abbrev_name=None
 ):
     """
     Args:

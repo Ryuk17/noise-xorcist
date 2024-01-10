@@ -24,8 +24,7 @@ class Baseline(nn.Module):
             self,
             *,
             backbone,
-            input_type,
-            output_type,
+            feat_type,
             loss_kwargs=None
     ):
         """
@@ -38,16 +37,14 @@ class Baseline(nn.Module):
         # backbone
         self.backbone = backbone
         self.loss_kwargs = loss_kwargs
-        self.input_type = input_type
-        self.output_type = output_type
+        self.feat_type = feat_type
 
     @classmethod
     def from_config(cls, cfg):
         backbone = build_backbone(cfg)
         return {
             'backbone': backbone,
-            'input_type': cfg.MODEL.INPUT_TYPE,
-            'output_type': cfg.MODEL.OUTPUT_TYPE,
+            'feat_type': cfg.INPUT.FEAT_TYPE,
             'loss_kwargs':
                 {
                     # loss name
@@ -59,7 +56,6 @@ class Baseline(nn.Module):
                         'alpha': cfg.MODEL.LOSSES.CE.ALPHA,
                         'scale': cfg.MODEL.LOSSES.CE.SCALE,
                         'index': cfg.MODEL.LOSSES.CE.INDEX,
-                        'gt_type': cfg.MODEL.LOSSES.CE.GT_TYPE
                     },
                     'mmse': {
                         'eps': cfg.MODEL.LOSSES.MMSE.EPS,

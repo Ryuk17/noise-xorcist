@@ -10,7 +10,6 @@ import torch
 import torch.nn.functional as F
 
 from noisexorcist.config import get_cfg
-from noisexorcist.modeling.meta_arch import build_model
 from noisexorcist.modeling.meta_arch.baseline import Baseline
 from noisexorcist.utils.checkpoint import Checkpointer
 
@@ -34,7 +33,7 @@ class Distiller(Baseline):
             if cfg_t.MODEL.HEADS.NORM == "syncBN":
                 cfg_t.MODEL.HEADS.NORM = "BN"
 
-            model_t = build_model(cfg_t)
+            model_t = Baseline(cfg_t)
 
             # No gradients for teacher model
             for param in model_t.parameters():
@@ -55,7 +54,7 @@ class Distiller(Baseline):
                 cfg_self.MODEL.BACKBONE.NORM = "BN"
             if cfg_self.MODEL.HEADS.NORM == "syncBN":
                 cfg_self.MODEL.HEADS.NORM = "BN"
-            model_self = build_model(cfg_self)
+            model_self = Baseline(cfg_self)
             # No gradients for self model
             for param in model_self.parameters():
                 param.requires_grad_(False)

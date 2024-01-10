@@ -35,7 +35,7 @@ def collect_torch_env():
 
 
 def get_env_module():
-    var_name = "FASTREID_ENV_MODULE"
+    var_name = "NOISEXORCIST_ENV_MODULE"
     return var_name, os.environ.get(var_name, "<not set>")
 
 
@@ -82,13 +82,13 @@ def collect_env_info():
     data.append(("numpy", np.__version__))
 
     try:
-        import fastreid  # noqa
+        import noisexorcist  # noqa
 
         data.append(
-            ("fastreid", fastreid.__version__ + " @" + os.path.dirname(fastreid.__file__))
+            ("noisexorcist", noisexorcist.__version__ + " @" + os.path.dirname(noisexorcist.__file__))
         )
     except ImportError:
-        data.append(("fastreid", "failed to import"))
+        data.append(("noisexorcist", "failed to import"))
 
     data.append(get_env_module())
     data.append(("PyTorch", torch_version + " @" + os.path.dirname(torch.__file__)))
@@ -153,6 +153,6 @@ if __name__ == "__main__":
     except ImportError:
         print(collect_env_info())
     else:
-        from fastreid.utils.collect_env import collect_env_info
+        from noisexorcist.utils.collect_env import collect_env_info
 
         print(collect_env_info())

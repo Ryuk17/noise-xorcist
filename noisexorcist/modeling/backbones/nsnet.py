@@ -13,10 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class NSNetModel(nn.Module):
-    def __init__(self, nfft, n_gru_layers, gru_dropout):
+    def __init__(self, input_dim, n_gru_layers, gru_dropout):
         super(NSNetModel, self).__init__()
-        self.nfft = nfft
-        self.n_frequency_bins = self.nfft // 2 + 1
+        self.n_frequency_bins = input_dim
         self.n_gru_layers = n_gru_layers
         self.gru_dropout = gru_dropout
 
@@ -56,12 +55,12 @@ def build_nsnet_backbone(cfg):
     # fmt: off
     pretrain = cfg.MODEL.BACKBONE.PRETRAIN
     pretrain_path = cfg.MODEL.BACKBONE.PRETRAIN_PATH
-    nfft = cfg.MODEL.BACKBONE.NFFT
+    input_dim = cfg.MODEL.BACKBONE.INPUT_DIM
     n_gru_layers = cfg.MODEL.BACKBONE.NSNET.GRU_LAYERS
     gru_dropout = cfg.MODEL.BACKBONE.NSNET.GRU_DROPOUT
     # fmt: on
 
-    model = NSNetModel(nfft, n_gru_layers, gru_dropout)
+    model = NSNetModel(input_dim, n_gru_layers, gru_dropout)
 
     if pretrain:
         try:

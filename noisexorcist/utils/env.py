@@ -84,7 +84,7 @@ _ENV_SETUP_DONE = False
 def setup_environment():
     """Perform environment setup work. The default setup is a no-op, but this
     function allows the user to specify a Python source file or a module in
-    the $FASTREID_ENV_MODULE environment variable, that performs
+    the NOISEXORCIST_ENV_MODULE environment variable, that performs
     custom setup work that may be necessary to their computing environment.
     """
     global _ENV_SETUP_DONE
@@ -94,7 +94,7 @@ def setup_environment():
 
     _configure_libraries()
 
-    custom_module_path = os.environ.get("FASTREID_ENV_MODULE")
+    custom_module_path = os.environ.get("NOISEXORCIST_ENV_MODULE")
 
     if custom_module_path:
         setup_custom_environment(custom_module_path)
@@ -109,7 +109,7 @@ def setup_custom_environment(custom_module):
     module, and run the setup function.
     """
     if custom_module.endswith(".py"):
-        module = _import_file("fastreid.utils.env.custom_module", custom_module)
+        module = _import_file("noisexorcist.utils.env.custom_module", custom_module)
     else:
         module = importlib.import_module(custom_module)
     assert hasattr(module, "setup_environment") and callable(module.setup_environment), (

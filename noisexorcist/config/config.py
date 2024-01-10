@@ -157,7 +157,7 @@ def get_cfg() -> CfgNode:
     """
     Get a copy of the default config.
     Returns:
-        a fastreid CfgNode instance.
+        a noisexorcist CfgNode instance.
     """
     from .defaults import _C
 
@@ -216,7 +216,7 @@ def configurable(init_func=None, *, from_config=None):
     """
 
     def check_docstring(func):
-        if func.__module__.startswith("fastreid."):
+        if func.__module__.startswith("noisexorcist."):
             assert (
                     func.__doc__ is not None and "experimental" in func.__doc__.lower()
             ), f"configurable {func} should be marked experimental"

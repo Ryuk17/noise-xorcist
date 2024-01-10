@@ -19,7 +19,7 @@ from torch.nn.parallel import DistributedDataParallel
 
 from noisexorcist.data import build_se_test_loader, build_se_train_loader
 from noisexorcist.evaluation import SeEvaluator, inference_on_dataset, print_csv_format
-from noisexorcist.modeling.meta_arch import build_model
+from noisexorcist.modeling.meta_arch.build import build_model
 from noisexorcist.solver import build_lr_scheduler, build_optimizer
 from noisexorcist.utils import comm
 from noisexorcist.utils.checkpoint import Checkpointer
