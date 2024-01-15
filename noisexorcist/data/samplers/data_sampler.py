@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@author:  l1aoxingyu
-@contact: sherlockliao01@gmail.com
+@author:  Ryuk
+@contact: jeryuklau@gmail.com
 """
 import itertools
 from typing import Optional

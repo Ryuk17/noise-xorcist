@@ -1,7 +1,7 @@
 DATASETS:
   PREPROCESS: spectrum
-  CLEAN_DIR: datasets/data/training_set/clean/
-  NOISY_DIR: datasets/data/training_set/noisy/
+  CLEAN_DIR: F:\GitWorkSpace\noise-xorcist\datasets\data\training_set\clean
+  NOISY_DIR: F:\GitWorkSpace\noise-xorcist\datasets\data\training_set\noisy
   FORMAT: wav
 
 MODEL:
@@ -31,6 +31,7 @@ INPUT:
 
 DATALOADER:
   NUM_WORKERS: 4
+
 
 SOLVER:
   AMP:

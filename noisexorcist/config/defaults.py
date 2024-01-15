@@ -19,6 +19,7 @@ _C = CN()
 _C.MODEL = CN()
 _C.MODEL.DEVICE = "cuda"
 _C.MODEL.META_ARCHITECTURE = "Baseline"
+_C.MODEL.FREEZE_LAYERS = []
 
 # ---------------------------------------------------------------------------- #
 # Backbone options
@@ -76,6 +77,8 @@ _C.DATASETS.FORMAT = "wav"
 _C.DATALOADER = CN()
 # Number of data loading threads
 _C.DATALOADER.NUM_WORKERS = 8
+# Options: TrainingSampler
+_C.DATALOADER.SAMPLER_TRAIN = "TrainingSampler"
 
 # For set re-weight
 _C.DATALOADER.SET_WEIGHT = []

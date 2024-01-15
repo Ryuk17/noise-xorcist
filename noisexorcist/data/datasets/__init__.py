@@ -19,6 +19,6 @@ def build_dataset(cfg, is_train, verbose=False, **kwargs):
     else:
         mode = "test"
 
-    dataset = cfg['DATASET']['PREPROCESS']
+    dataset = cfg['DATASETS']['PREPROCESS']
     return __all__[dataset](cfg, mode, verbose, **kwargs)
 

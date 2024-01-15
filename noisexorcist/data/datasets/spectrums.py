@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 @author:  Ryuk
 @contact: jeryuklau@gmail.com
@@ -10,6 +11,7 @@ from torch.utils.data import Dataset
 import torchaudio
 import os
 from .vad import VadDetector
+from pathlib import Path
 
 
 class Spectrum(Dataset):
@@ -17,8 +19,8 @@ class Spectrum(Dataset):
     Create a PyTorch Dataset object from a directory containing clean and noisy WAV files
     """
     def __init__(self, cfg, mode, verbose=True, **kwargs):
-        self.clean_dir = cfg['DATA']['CLEAN_DIR']
-        self.noisy_dir = cfg['DATA']['NOISY_DIR']
+        self.clean_dir = Path(cfg['DATASETS']['CLEAN_DIR'])
+        self.noisy_dir = Path(cfg['DATASETS']['NOISY_DIR'])
         self.sample_rate = cfg['INPUT']['SAMPLE_RATE']
         self.frame_len = cfg['INPUT']['FRAME_LEN']
         self.nfft = cfg['INPUT']['NFFT']
@@ -36,8 +38,8 @@ class Spectrum(Dataset):
         else:
             raise NotImplementedError
 
-        assert os.path.exists(self.clean_dir), 'No clean WAV file folder found!'
-        assert os.path.exists(self.noisy_dir), 'No noisy WAV file folder found!'
+        assert os.path.exists(self.clean_dir), f"No clean WAV file folder found in {self.clean_dir} !"
+        assert os.path.exists(self.noisy_dir), f"No noisy WAV file folder found in {self.noisy_dir} !"
 
         self.clean_wav_list = {}
         for i, filename in enumerate(sorted(os.listdir(self.clean_dir))):
@@ -60,20 +62,24 @@ class Spectrum(Dataset):
         return len(self.noisy_wav_list)
 
     def __getitem__(self, idx):
-        noisy_path = self.noisy_WAVs[idx]
+        noisy_path = self.noisy_wav_list[idx]
         clean_path = self.clean_dir.joinpath(noisy_path.name.split('.')[0] + '.wav')  # get the filename of the clean WAV from the filename of the noisy WAV
         while True:
             try:
-                clean_waveform, _ = torchaudio.load(clean_path, normalization=2**15)
-                noisy_waveform, _ = torchaudio.load(noisy_path, normalization=2**15)
+                clean_waveform, _ = torchaudio.load(clean_path, normalize=True)
+                noisy_waveform, _ = torchaudio.load(noisy_path, normalize=True)
             except (RuntimeError, OSError):
                 continue
             break
 
         assert clean_waveform.shape[0] == 1 and noisy_waveform.shape[0] == 1, 'WAV file is not single channel!'
 
-        x_stft = torch.stft(noisy_waveform.view(-1), nfft=self.nfft, hop_length=self.hop_len, win_length=self.nfft, window=self.window)
-        y_stft = torch.stft(clean_waveform.view(-1), nfft=self.nfft, hop_length=self.hop_len, win_length=self.nfft, window=self.window)
+        x_stft = torch.stft(noisy_waveform.view(-1), n_fft=self.nfft,
+                            hop_length=self.hop_len, win_length=self.nfft,
+                            window=self.window, return_complex=True)
+        y_stft = torch.stft(clean_waveform.view(-1), n_fft=self.nfft,
+                            hop_length=self.hop_len, win_length=self.nfft,
+                            window=self.window, return_complex=True)
 
         x_ps = x_stft.pow(2).sum(-1)
         x_lps = LogTransform()(x_ps)
