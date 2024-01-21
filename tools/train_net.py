@@ -76,7 +76,7 @@ def do_train(cfg, model, resume=False):
     model.train()
     optimizer = build_optimizer(cfg, model)
 
-    iters_per_epoch = len(data_loader.dataset) // cfg.SOLVER.IMS_PER_BATCH
+    iters_per_epoch = len(data_loader.dataset) // cfg.SOLVER.BATCH_SIZE
     scheduler = build_lr_scheduler(cfg, optimizer, iters_per_epoch)
 
     checkpointer = Checkpointer(

@@ -81,10 +81,10 @@ class Spectrum(Dataset):
                             hop_length=self.hop_len, win_length=self.nfft,
                             window=self.window, return_complex=True)
 
-        x_ps = x_stft.pow(2).sum(-1)
+        x_ps = x_stft.abs().pow(2)
         x_lps = LogTransform()(x_ps)
 
-        y_ps = y_stft.pow(2).sum(-1)
+        y_ps = y_stft.abs().pow(2)
         y_lps = LogTransform()(y_ps)
 
         x_ms = x_ps.sqrt()
