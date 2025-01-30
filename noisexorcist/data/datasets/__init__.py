@@ -4,21 +4,20 @@
 @contact: jeryuklau@gmail.com
 """
 
-from .spectrums import Spectrum
+import logging
 
+from spectrum import SpectrumDataset
 
+logger = logging.getLogger(__name__)
 
-__all__ = {
-    'spectrum': Spectrum
+datasets_dict = {
+    "spectrum": SpectrumDataset
 }
 
 
-def build_dataset(cfg, is_train, verbose=False, **kwargs):
-    if is_train:
-        mode = "train"
+def build_datasets(dir, cfg, split):
+    if cfg['FEATURE'] in datasets_dict:
+        return datasets_dict[cfg['FEATURE']](dir, cfg, split)
     else:
-        mode = "test"
-
-    dataset = cfg['DATASETS']['PREPROCESS']
-    return __all__[dataset](cfg, mode, verbose, **kwargs)
-
+        logger.error(f"Invalid feature named {cfg['FEATURE']}")
+        raise KeyError

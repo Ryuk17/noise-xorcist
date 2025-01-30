@@ -3,6 +3,7 @@
 @author:  Ryuk
 @contact: jeryuklau@gmail.com
 """
+
 import itertools
 from typing import Optional
 

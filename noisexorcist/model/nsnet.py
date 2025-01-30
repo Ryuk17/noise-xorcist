@@ -1,6 +1,9 @@
+# encoding: utf-8
 """
-Creates a NSNet Model defined as the 1st DNS Challenge baseline
+@author:  Ryuk
+@contact: jeryuklau@gmail.com
 """
+
 import logging
 import math
 
@@ -46,23 +49,17 @@ class NSNetModel(nn.Module):
         return x
 
 
-def build_nsnet_backbone(cfg):
-    """
-    Create a MobileNetV2 instance from config.
-    Returns:
-        MobileNetV2: a :class: `MobileNetV2` instance.
-    """
+def build_nsnet(cfg):
     # fmt: off
-    pretrain = cfg.MODEL.BACKBONE.PRETRAIN
-    pretrain_path = cfg.MODEL.BACKBONE.PRETRAIN_PATH
-    input_dim = cfg.MODEL.BACKBONE.INPUT_DIM
-    n_gru_layers = cfg.MODEL.BACKBONE.NSNET.GRU_LAYERS
-    gru_dropout = cfg.MODEL.BACKBONE.NSNET.GRU_DROPOUT
+    input_dim = cfg["INPUT_DIM"]
+    n_gru_layers = cfg["GRU_LAYERS"]
+    gru_dropout = cfg["GRU_DROPOUT"]
+    pretrain_path = cfg["PRETRAIN_PATH"]
     # fmt: on
 
     model = NSNetModel(input_dim, n_gru_layers, gru_dropout)
 
-    if pretrain:
+    if pretrain_path:
         try:
             state_dict = torch.load(pretrain_path, map_location=torch.device('cpu'))
             logger.info(f"Loading pretrained model from {pretrain_path}")
