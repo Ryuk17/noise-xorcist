@@ -7,6 +7,7 @@
 import logging
 import os
 import sys
+import yaml
 from collections import OrderedDict
 
 import torch
@@ -14,10 +15,13 @@ from torch.nn.parallel import DistributedDataParallel
 
 sys.path.append('.')
 
-from noisexorcist.dataloader import build_dataloader
+from noisexorcist.data import build_dataloader
 from noisexorcist.model import build_model
+from noisexorcist.engine import default_argument_parser, default_setup, launch
+from noisexorcist.evaluation.testing import flatten_results_dict
 from noisexorcist.solver import build_lr_scheduler, build_optimizer
 from noisexorcist.utils.checkpoint import Checkpointer, PeriodicCheckpointer
+from noisexorcist.evaluation import inference_on_dataset, print_csv_format, SeEvaluator
 from noisexorcist.utils import comm
 from noisexorcist.utils.events import (
     CommonMetricPrinter,
@@ -29,72 +33,65 @@ from noisexorcist.utils.events import (
 logger = logging.getLogger("noisexorcist")
 
 
-def get_evaluator(cfg, dataset_name, output_dir=None):
-    data_loader, num_query = build_se_test_loader(cfg, dataset_name=dataset_name)
+def get_evaluator(cfg, output_dir=None):
+    data_loader = build_dataloader(cfg, split="val")
     return data_loader, SeEvaluator(cfg, output_dir)
 
 
 def do_test(cfg, model):
-    results = OrderedDict()
-    for idx, dataset_name in enumerate(cfg.DATASETS.TESTS):
-        logger.info("Prepare testing set")
-        try:
-            data_loader, evaluator = get_evaluator(cfg, dataset_name)
-        except NotImplementedError:
-            logger.warn(
-                "No evaluator found. implement its `build_evaluator` method."
-            )
-            results[dataset_name] = {}
-            continue
-        results_i = inference_on_dataset(model, data_loader, evaluator, flip_test=cfg.TEST.FLIP.ENABLED)
-        results[dataset_name] = results_i
+    logger.info("Prepare testing set")
+    try:
+        data_loader, evaluator = get_evaluator(cfg)
+    except NotImplementedError:
+        logger.warn(
+            "No evaluator found. implement its `build_evaluator` method."
+        )
+        raise
 
-        if comm.is_main_process():
-            assert isinstance(
-                results, dict
-            ), "Evaluator must return a dict on the main process. Got {} instead.".format(
-                results
-            )
-            logger.info("Evaluation results for {} in csv format:".format(dataset_name))
-            results_i['dataset'] = dataset_name
-            print_csv_format(results_i)
+    results = inference_on_dataset(model, data_loader, evaluator)
 
-    if len(results) == 1:
-        results = list(results.values())[0]
+    if comm.is_main_process():
+        assert isinstance(
+            results, dict
+        ), "Evaluator must return a dict on the main process. Got {} instead.".format(
+            results
+        )
+        logger.info("Evaluation results in csv format")
+        print_csv_format(results)
 
     return results
 
 
 def do_train(cfg, model, resume=False):
-    data_loader = build_se_train_loader(cfg)
+    data_loader = build_dataloader(cfg)
     data_loader_iter = iter(data_loader)
 
     model.train()
-    optimizer = build_optimizer(cfg, model)
+    optimizer = build_optimizer(cfg)
 
-    iters_per_epoch = len(data_loader.dataset) // cfg.SOLVER.BATCH_SIZE
+    iters_per_epoch = len(data_loader.dataset) // cfg["SOLVER"]["BATCH_SIZE"]
     scheduler = build_lr_scheduler(cfg, optimizer, iters_per_epoch)
 
     checkpointer = Checkpointer(
         model,
-        cfg.OUTPUT_DIR,
+        cfg["OUTPUT_DIR"],
         save_to_disk=comm.is_main_process(),
         optimizer=optimizer,
         **scheduler
     )
 
     start_epoch = (
-            checkpointer.resume_or_load(cfg.MODEL.WEIGHTS, resume=resume).get("epoch", -1) + 1
+            checkpointer.resume_or_load(cfg["MODEL"]["WEIGHTS"], resume=resume).get("epoch", -1) + 1
     )
     iteration = start_iter = start_epoch * iters_per_epoch
 
-    max_epoch = cfg.SOLVER.MAX_EPOCH
+    max_epoch = cfg["SOLVER"]["MAX_EPOCH"]
     max_iter = max_epoch * iters_per_epoch
-    warmup_iters = cfg.SOLVER.WARMUP_ITERS
-    delay_epochs = cfg.SOLVER.DELAY_EPOCHS
+    warmup_iters = cfg["SOLVER"]["WARMUP_ITERS"]
+    delay_epochs = cfg["SOLVER"]["DELAY_EPOCHS"]
 
-    periodic_checkpointer = PeriodicCheckpointer(checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD, max_epoch)
-    if len(cfg.DATASETS.TESTS) == 1:
+    periodic_checkpointer = PeriodicCheckpointer(checkpointer, cfg["SOLVER"]["CHECKPOINT_PERIOD"], max_epoch)
+    if len(cfg["DATASETS"]["TESTS"]) == 1:
         metric_name = "metric"
     else:
         metric_name = cfg.DATASETS.TESTS[0] + "/metric"
@@ -102,8 +99,8 @@ def do_train(cfg, model, resume=False):
     writers = (
         [
             CommonMetricPrinter(max_iter),
-            JSONWriter(os.path.join(cfg.OUTPUT_DIR, "metrics.json")),
-            TensorboardXWriter(cfg.OUTPUT_DIR)
+            JSONWriter(os.path.join(cfg["OUTPUT_DIR"], "metrics.json")),
+            TensorboardXWriter(cfg["OUTPUT_DIR"])
         ]
         if comm.is_main_process()
         else []
@@ -167,14 +164,13 @@ def do_train(cfg, model, resume=False):
             periodic_checkpointer.step(epoch, **metric_dict)
 
 
+
 def setup(args):
     """
     Create configs and perform basic setups.
     """
-    cfg = get_cfg()
-    cfg.merge_from_file(args.config_file)
-    cfg.merge_from_list(args.opts)
-    cfg.freeze()
+    with open(args.config_file, "r") as file:
+        cfg = yaml.safe_load(file)
     default_setup(cfg, args)
     return cfg
 
@@ -184,13 +180,6 @@ def main(args):
 
     model = build_model(cfg)
     logger.info("Model:\n{}".format(model))
-    if args.eval_only:
-        cfg.defrost()
-        cfg.MODEL.BACKBONE.PRETRAIN = False
-
-        Checkpointer(model).load(cfg.MODEL.WEIGHTS)  # load trained model
-
-        return do_test(cfg, model)
 
     distributed = comm.get_world_size() > 1
     if distributed:
