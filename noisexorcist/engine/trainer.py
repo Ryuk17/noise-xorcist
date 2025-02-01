@@ -15,6 +15,7 @@ from torch.nn.parallel import DataParallel, DistributedDataParallel
 
 import noisexorcist.utils.comm as comm
 from noisexorcist.utils.events import EventStorage, get_event_storage
+from noisexorcist.data import select_inputs
 
 __all__ = ["TrainerBase", "SimpleTrainer"]
 
@@ -36,8 +37,8 @@ class TrainerBase:
         storage(EventStorage): An EventStorage that's opened during the course of training.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, cfg):
+        self.cfg = cfg
 
     def train(self, start_epoch: int, max_epoch: int, iters_per_epoch: int):
         """
@@ -76,7 +77,7 @@ class SimpleTrainer(TrainerBase):
     or write your own training loop.
     """
 
-    def __init__(self, model, data_loader, optimizer, loss):
+    def __init__(self, cfg, model, data_loader, optimizer, loss):
         """
         Args:
             model: a torch Module. Takes a data from data_loader and returns a
@@ -93,7 +94,7 @@ class SimpleTrainer(TrainerBase):
         like evaluation during training, you can overwrite its train() method.
         """
         model.train()
-
+        self.cfg = cfg
         self.model = model
         self.data_loader = data_loader
         self._data_loader_iter = iter(data_loader)
@@ -117,7 +118,8 @@ class SimpleTrainer(TrainerBase):
         If your want to do something with the heads, you can wrap the model.
         """
 
-        model_outputs = self.model(data)
+        model_inputs = select_inputs(self.cfg, data)
+        model_outputs = self.model(model_inputs)
         loss_dict = self.loss(model_outputs, data)
         losses = sum(loss_dict.values())
 
@@ -186,7 +188,7 @@ class AMPTrainer(SimpleTrainer):
     in the training loop.
     """
 
-    def __init__(self, model, data_loader, optimizer, grad_scaler=None):
+    def __init__(self, cfg, model, data_loader, optimizer, grad_scaler=None):
         """
 
         Args:
@@ -219,7 +221,8 @@ class AMPTrainer(SimpleTrainer):
         data_time = time.perf_counter() - start
 
         with autocast():
-            model_outputs = self.model(data)
+            model_inputs = select_inputs(self.cfg, data)
+            model_outputs = self.model(model_inputs)
             loss_dict = self.loss(model_outputs, data)
             losses = sum(loss_dict.values())
 

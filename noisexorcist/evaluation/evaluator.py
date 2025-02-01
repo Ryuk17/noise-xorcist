@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 import torch
 
+from noisexorcist.data import select_inputs
 from noisexorcist.utils import comm
 from noisexorcist.utils.logger import log_every_n_seconds
 
@@ -79,7 +80,7 @@ class DatasetEvaluator:
 #         return results
 
 
-def inference_on_dataset(model, data_loader, evaluator, flip_test=False):
+def inference_on_dataset(cfg, model, data_loader, evaluator):
     """
     Run model on the data_loader and evaluate the metrics with evaluator.
     The model will be used in eval mode.
@@ -93,7 +94,6 @@ def inference_on_dataset(model, data_loader, evaluator, flip_test=False):
         evaluator (DatasetEvaluator): the evaluator to run. Use
             :class:`DatasetEvaluators([])` if you only want to benchmark, but
             don't want to do any evaluation.
-        flip_test (bool): If get features with flipped images
     Returns:
         The return value of `evaluator.evaluate()`
     """
@@ -108,22 +108,19 @@ def inference_on_dataset(model, data_loader, evaluator, flip_test=False):
     start_time = time.perf_counter()
     total_compute_time = 0
     with inference_context(model), torch.no_grad():
-        for idx, inputs in enumerate(data_loader):
+        for idx, data in enumerate(data_loader):
             if idx == num_warmup:
                 start_time = time.perf_counter()
                 total_compute_time = 0
 
             start_compute_time = time.perf_counter()
-            outputs = model(inputs)
-            # Flip test
-            if flip_test:
-                inputs["images"] = inputs["images"].flip(dims=[3])
-                flip_outputs = model(inputs)
-                outputs = (outputs + flip_outputs) / 2
+            model_inputs = select_inputs(cfg, data)
+            model_outputs = model(model_inputs)
+
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             total_compute_time += time.perf_counter() - start_compute_time
-            evaluator.process(inputs, outputs)
+            evaluator.process(data, model_outputs)
 
             iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
             seconds_per_batch = total_compute_time / iters_after_start

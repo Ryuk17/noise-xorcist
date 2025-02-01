@@ -15,8 +15,9 @@ from torch.nn.parallel import DistributedDataParallel
 
 sys.path.append('.')
 
-from noisexorcist.data import build_dataloader
+from noisexorcist.data import build_dataloader, select_inputs
 from noisexorcist.model import build_model
+from noisexorcist.loss import build_loss
 from noisexorcist.engine import default_argument_parser, default_setup, launch
 from noisexorcist.evaluation.testing import flatten_results_dict
 from noisexorcist.solver import build_lr_scheduler, build_optimizer
@@ -63,14 +64,15 @@ def do_test(cfg, model):
 
 
 def do_train(cfg, model, resume=False):
-    data_loader = build_dataloader(cfg)
+    data_loader = build_dataloader(cfg["DATA"])
     data_loader_iter = iter(data_loader)
 
     model.train()
-    optimizer = build_optimizer(cfg)
+    optimizer = build_optimizer(cfg["SOLVER"])
 
     iters_per_epoch = len(data_loader.dataset) // cfg["SOLVER"]["BATCH_SIZE"]
-    scheduler = build_lr_scheduler(cfg, optimizer, iters_per_epoch)
+    scheduler = build_lr_scheduler(cfg["SOLVER"], optimizer, iters_per_epoch)
+    loss = build_loss(cfg["LOSSES"])
 
     checkpointer = Checkpointer(
         model,
@@ -91,10 +93,10 @@ def do_train(cfg, model, resume=False):
     delay_epochs = cfg["SOLVER"]["DELAY_EPOCHS"]
 
     periodic_checkpointer = PeriodicCheckpointer(checkpointer, cfg["SOLVER"]["CHECKPOINT_PERIOD"], max_epoch)
-    if len(cfg["DATASETS"]["TESTS"]) == 1:
-        metric_name = "metric"
+    if len(cfg["DATA"]["TESTS"]["METRICS"]) == 1:
+        metric_name = cfg["DATA"]["TESTS"]["METRICS"]
     else:
-        metric_name = cfg.DATASETS.TESTS[0] + "/metric"
+        metric_name = cfg["DATA"]["TESTS"]["METRICS"][0] + "/metric"
 
     writers = (
         [
@@ -106,9 +108,7 @@ def do_train(cfg, model, resume=False):
         else []
     )
 
-    # compared to "train_net.py", we do not support some hooks, such as
-    # accurate timing, FP16 training and precise BN here,
-    # because they are not trivial to implement in a small training loop
+
     logger.info("Start training from epoch {}".format(start_epoch))
     with EventStorage(start_iter) as storage:
         for epoch in range(start_epoch, max_epoch):
@@ -117,7 +117,9 @@ def do_train(cfg, model, resume=False):
                 data = next(data_loader_iter)
                 storage.iter = iteration
 
-                loss_dict = model(data)
+                model_inputs = select_inputs(cfg, data)
+                model_outputs = model(model_inputs)
+                loss_dict = loss(model_outputs, data)
                 losses = sum(loss_dict.values())
                 assert torch.isfinite(losses).all(), loss_dict
 
@@ -150,8 +152,8 @@ def do_train(cfg, model, resume=False):
                 scheduler["lr_sched"].step()
 
             if (
-                    cfg.TEST.EVAL_PERIOD > 0
-                    and (epoch + 1) % cfg.TEST.EVAL_PERIOD == 0
+                    cfg["DATA"]["TEST"]["EVAL_PERIOD"] > 0
+                    and (epoch + 1) % cfg["DATA"]["TEST"]["EVAL_PERIOD"] == 0
                     and iteration != max_iter - 1
             ):
                 results = do_test(cfg, model)
@@ -178,7 +180,7 @@ def setup(args):
 def main(args):
     cfg = setup(args)
 
-    model = build_model(cfg)
+    model = build_model(cfg["MODEL"])
     logger.info("Model:\n{}".format(model))
 
     distributed = comm.get_world_size() > 1

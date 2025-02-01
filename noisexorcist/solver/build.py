@@ -125,8 +125,8 @@ def build_optimizer(cfg):
 
 
 def build_lr_scheduler(cfg, optimizer, iters_per_epoch):
-    max_epoch = cfg.SOLVER.MAX_EPOCH - max(
-        math.ceil(cfg.SOLVER.WARMUP_ITERS / iters_per_epoch), cfg.SOLVER.DELAY_EPOCHS)
+    max_epoch = cfg["MAX_EPOCH"] - max(
+        math.ceil(cfg["WARMUP_ITERS"] / iters_per_epoch), cfg["DELAY_EPOCHS"])
 
     scheduler_dict = {}
 
@@ -134,29 +134,29 @@ def build_lr_scheduler(cfg, optimizer, iters_per_epoch):
         "MultiStepLR": {
             "optimizer": optimizer,
             # multi-step lr scheduler options
-            "milestones": cfg.SOLVER.STEPS,
-            "gamma": cfg.SOLVER.GAMMA,
+            "milestones": cfg["STEPS"],
+            "gamma": cfg["GAMMA"],
         },
         "CosineAnnealingLR": {
             "optimizer": optimizer,
             # cosine annealing lr scheduler options
             "T_max": max_epoch,
-            "eta_min": cfg.SOLVER.ETA_MIN_LR,
+            "eta_min": cfg["ETA_MIN_LR"],
         },
 
     }
 
-    scheduler_dict["lr_sched"] = getattr(lr_scheduler, cfg.SOLVER.SCHED)(
-        **scheduler_args[cfg.SOLVER.SCHED])
+    scheduler_dict["lr_sched"] = getattr(lr_scheduler, cfg["SCHED"])(
+        **scheduler_args[cfg["SCHED"]])
 
-    if cfg.SOLVER.WARMUP_ITERS > 0:
+    if cfg["WARMUP_ITERS"] > 0:
         warmup_args = {
             "optimizer": optimizer,
 
             # warmup options
-            "warmup_factor": cfg.SOLVER.WARMUP_FACTOR,
-            "warmup_iters": cfg.SOLVER.WARMUP_ITERS,
-            "warmup_method": cfg.SOLVER.WARMUP_METHOD,
+            "warmup_factor": cfg["WARMUP_FACTOR"],
+            "warmup_iters": cfg["SOLVER.WARMUP_ITERS"],
+            "warmup_method": cfg["SOLVER.WARMUP_METHOD"],
         }
         scheduler_dict["warmup_sched"] = lr_scheduler.WarmupLR(**warmup_args)
 

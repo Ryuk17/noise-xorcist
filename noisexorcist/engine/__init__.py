@@ -1,8 +1,9 @@
-# encoding: utf-8
+# -*- coding:utf-8 -*-
 """
-@author:  liaoxingyu
-@contact: sherlockliao01@gmail.com
+@author:：Ryuk
+@contact: jeryuklau@gmail.com
 """
+
 from .trainer import *
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

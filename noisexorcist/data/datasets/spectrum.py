@@ -15,7 +15,7 @@ import torch
 import torchaudio
 from torch.utils.data import Dataset
 
-from utils import build_window
+from noisexorcist.data.utils import build_window
 
 torchaudio.set_audio_backend("soundfile")  # default backend (SoX) has bugs when loading WAVs
 
@@ -123,9 +123,22 @@ class SpectrumDataset(Dataset):
         x_lps = torch.stack(frames, dim=0).transpose(0, 1)   # (frequency, time)
 
         if self.split == "train":
-            return [x_lps, x_ms, y_ms, noise_ms, VAD]
+            return {
+                "x_lps": x_lps,
+                "x_ms": x_ms,
+                "y_ms": y_ms,
+                "noise_ms": noise_ms,
+                "VAD": VAD
+            }
         else:
-            return [noisy_waveform.view(-1), clean_waveform.view(-1), x_stft, y_stft, x_lps, x_ms, y_ms, VAD]
+            return {
+                "x_stft": x_stft,
+                "y_stft": y_stft,
+                "x_lps": x_lps,
+                "x_ms": x_ms,
+                "y_ms": y_ms,
+                "VAD": VAD
+            }
     
     def __moving_average(self, a, n=3):
         ret = torch.cumsum(a, dim=0)

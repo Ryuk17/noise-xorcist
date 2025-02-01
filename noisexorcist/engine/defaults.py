@@ -211,7 +211,7 @@ class DefaultTrainer(TrainerBase):
         )
 
         self.iters_per_epoch = len(data_loader.dataset) // cfg.SOLVER.IMS_PER_BATCH
-        self.scheduler = self.build_lr_scheduler(cfg, optimizer, self.iters_per_epoch)
+        self.scheduler = self.build_lr_scheduler(cfg["SOLVER"], optimizer, self.iters_per_epoch)
 
         # Assume no other objects need to be checkpointed.
         # We can later make it checkpoint the stateful hooks
