@@ -49,7 +49,7 @@ def do_test(cfg, model):
         )
         raise
 
-    results = inference_on_dataset(model, data_loader, evaluator)
+    results = inference_on_dataset(cfg, model, data_loader, evaluator)
 
     if comm.is_main_process():
         assert isinstance(
@@ -108,7 +108,6 @@ def do_train(cfg, model, resume=False):
         else []
     )
 
-
     logger.info("Start training from epoch {}".format(start_epoch))
     with EventStorage(start_iter) as storage:
         for epoch in range(start_epoch, max_epoch):
@@ -164,7 +163,6 @@ def do_train(cfg, model, resume=False):
 
             metric_dict = dict(metric=flatten_results[metric_name] if metric_name in flatten_results else -1)
             periodic_checkpointer.step(epoch, **metric_dict)
-
 
 
 def setup(args):

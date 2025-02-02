@@ -16,8 +16,8 @@ class WeightedSpeechDistortionLoss(nn.Module):  # weighted phase magnitude loss
         super(WeightedSpeechDistortionLoss, self).__init__()
         self.alpha = cfg["ALPHA"]
 
-    def forward(self, inputs, labels):
-        x_lps, x_ms, y_ms, noise_ms, VAD = labels
+    def forward(self, inputs, data):
+        x_lps, x_ms, y_ms, noise_ms, VAD = data["x_lps"], data["x_ms"], data["y_ms"], data["noise_ms"], data["VAD"]
         y_hat = inputs
 
         VAD_expanded = torch.unsqueeze(VAD, dim=1).expand_as(y_ms)
