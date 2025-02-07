@@ -47,5 +47,5 @@ class Metrics(torch.nn.Module):
 
 
 def build_metrics(cfg):
-    pass
+    return Metrics(cfg)
     

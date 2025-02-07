@@ -1,0 +1,77 @@
+
+CUDNN_BENCHMARK: True
+
+MODEL:
+  NAME: NSNET
+  INPUT_DIM: 129
+  GRU_LAYERS: 3
+  GRU_DROPOUT: 0.5
+  PRETRAIN_PATH:
+  WEIGHTS:
+
+LOSSES:
+  NAME: ["WSD", ]
+
+  WSD:
+    SCALE: 1.
+    ALPHA: 0.4
+    EPS: 1e-7
+
+DATA:
+  TRAIN_DIR: ../datasets/outputs/train/
+  VAL_DIR: ../datasets/outputs/val/
+  TEST_DIR: ../datasets/outputs/test/
+
+  SAMPLE_RATE: 16000
+  FRAME_LEN: 128
+  HOP_LEN: 128
+  N_FFT: 256
+  WIN_TYPE: hanning
+  NORMALIZE: True
+
+  FEATURE: spectrum
+
+  NUM_WORKERS: 4
+  TRAIN_BATCH_SIZE: 4
+  VAL_BATCH_SIZE: 4
+
+  TESTS:
+    METRICS: ["PESQ", "STOI", "SNR", ]
+    EVAL_PERIOD: 10
+
+
+SOLVER:
+  AMP:
+    ENABLED: False
+  OPT: SGD
+
+  MAX_EPOCH: 120
+  WARMUP_FACTOR: 0.1
+  WARMUP_ITERS: 2000
+  WARMUP_METHOD: "linear"
+  DELAY_EPOCHS: 0
+
+
+  SCHED: MultiStepLR
+  STEPS: [ 40, 90 ]
+  GAMMA: 0.1
+  ETA_MIN_LR:  1e-7
+
+  BASE_LR: 0.00035
+  WEIGHT_DECAY: 0.0005
+  WEIGHT_DECAY_NORM: 0.0005
+  BIAS_LR_FACTOR: 1.0
+  WEIGHT_DECAY_BIAS: 0.0005
+  MOMENTUM: 0.9
+  NESTEROV: False
+
+  CHECKPOINT_PERIOD: 10
+
+  CLIP_GRADIENTS:
+    ENABLED: False
+    CLIP_VALUE: 5.0
+    NORM_TYPE: 2.0
+
+
+OUTPUT_DIR: ../outputs/nsnet/
+

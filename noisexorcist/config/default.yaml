@@ -6,8 +6,8 @@ MODEL:
   INPUT_DIM: 129
   GRU_LAYERS: 3
   GRU_DROPOUT: 0.5
-  PRETRAIN_PATH: None
-  WEIGHTS: None
+  PRETRAIN_PATH:
+  WEIGHTS:
 
 LOSSES:
   NAME: ["WSD", ]
@@ -20,6 +20,7 @@ LOSSES:
 DATA:
   TRAIN_DIR: ./datasets/data/train/
   VAL_DIR: ./datasets/data/val/
+  TEST_DIR: ./datasets/data/test/
 
   SAMPLE_RATE: 16000
   FRAME_LEN: 128
@@ -28,7 +29,7 @@ DATA:
   WIN_TYPE: hanning
   NORMALIZE: True
 
-  FEATURE: Spectrum
+  FEATURE: spectrum
 
   NUM_WORKERS: 12
   TRAIN_BATCH_SIZE: 256

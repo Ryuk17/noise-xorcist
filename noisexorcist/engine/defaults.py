@@ -12,6 +12,7 @@ import argparse
 import logging
 import os
 import sys
+import yaml
 from collections import OrderedDict
 
 import torch
@@ -42,7 +43,7 @@ def default_argument_parser():
         argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="noisexorcist Training")
-    parser.add_argument("--config-file", default="../configs/nsnet.yml", metavar="FILE", help="path to config file")
+    parser.add_argument("--config-file", default="../config/default.yaml", metavar="FILE", help="path to config file")
     parser.add_argument(
         "--resume",
         action="store_true",
@@ -104,7 +105,7 @@ def default_setup(cfg, args):
         # config.yaml in output directory
         path = os.path.join(output_dir, "config.yaml")
         with PathManager.open(path, "w") as f:
-            f.write(cfg.dump())
+            yaml.dump(cfg, stream=f, allow_unicode=True)
         logger.info("Full config saved to {}".format(os.path.abspath(path)))
 
     # make sure each worker has a different, yet deterministic seed if specified

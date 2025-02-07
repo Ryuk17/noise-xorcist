@@ -5,8 +5,8 @@
 """
 
 import logging
-
-from spectrum import SpectrumDataset
+from pathlib import Path
+from .spectrum import SpectrumDataset
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ datasets_dict = {
 
 def build_datasets(dir, cfg, split):
     if cfg['FEATURE'] in datasets_dict:
-        return datasets_dict[cfg['FEATURE']](dir, cfg, split)
+        return datasets_dict[cfg['FEATURE']](Path(dir), cfg, split)
     else:
         logger.error(f"Invalid feature named {cfg['FEATURE']}")
         raise KeyError

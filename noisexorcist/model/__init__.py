@@ -5,7 +5,7 @@
 """
 
 import logging
-from nsnet import build_nsnet
+from .nsnet import build_nsnet
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ models_dict = {
 
 def build_model(cfg):
     if cfg['NAME'] in models_dict:
-        return models_dict[cfg['NAME']]
+        return models_dict[cfg['NAME']](cfg)
     else:
         logger.error(f"Invalid model named {cfg['NAME']}")
         raise KeyError

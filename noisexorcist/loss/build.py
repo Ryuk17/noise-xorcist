@@ -5,9 +5,9 @@
 """
 
 import logging
-from mse_loss import *
-from phase_loss import *
-from snr_loss import *
+from .mse_loss import *
+from .phase_loss import *
+from .snr_loss import *
 
 
 logger = logging.getLogger(__name__)

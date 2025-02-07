@@ -17,8 +17,6 @@ from torch.utils.data import Dataset
 
 from noisexorcist.data.utils import build_window
 
-torchaudio.set_audio_backend("soundfile")  # default backend (SoX) has bugs when loading WAVs
-
 logger = logging.getLogger(__name__)
 
 
@@ -38,8 +36,8 @@ class SpectrumDataset(Dataset):
 
         self.split = split
 
-        assert os.path.exists(self.clean_dir), 'No clean WAV file folder found!'
-        assert os.path.exists(self.noisy_dir), 'No noisy WAV file folder found!'
+        assert os.path.exists(self.clean_dir), f'No clean WAV file folder found in {self.clean_dir} !'
+        assert os.path.exists(self.noisy_dir), f'No noisy WAV file folder found in {self.noisy_dir} !'
 
         self.clean_WAVs = {}
         for i, filename in enumerate(sorted(os.listdir(self.clean_dir))):

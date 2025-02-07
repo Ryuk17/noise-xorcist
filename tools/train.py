@@ -68,9 +68,9 @@ def do_train(cfg, model, resume=False):
     data_loader_iter = iter(data_loader)
 
     model.train()
-    optimizer = build_optimizer(cfg["SOLVER"])
+    optimizer = build_optimizer(model, cfg["SOLVER"])
 
-    iters_per_epoch = len(data_loader.dataset) // cfg["SOLVER"]["BATCH_SIZE"]
+    iters_per_epoch = len(data_loader.dataset) // cfg["DATA"]["TRAIN_BATCH_SIZE"]
     scheduler = build_lr_scheduler(cfg["SOLVER"], optimizer, iters_per_epoch)
     loss = build_loss(cfg["LOSSES"])
 
@@ -184,7 +184,7 @@ def main(args):
     distributed = comm.get_world_size() > 1
     if distributed:
         model = DistributedDataParallel(
-            model, device_ids=[comm.get_local_rank()], broadcast_buffers=False
+            model.cuda(), device_ids=[comm.get_local_rank()], broadcast_buffers=False
         )
 
     do_train(cfg, model, resume=args.resume)
