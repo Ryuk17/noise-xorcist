@@ -20,9 +20,10 @@ def print_csv_format(results):
     assert isinstance(results, OrderedDict) or not len(results), results
     logger = logging.getLogger(__name__)
 
-    dataset_name = results.pop('dataset')
-    metrics = ["Dataset"] + [k for k in results]
-    csv_results = [(dataset_name, *list(results.values()))]
+    metrics = [k for k in results]
+    csv_results = [("", *list(results.values()))]
+    print(csv_results)
+
 
     # tabulate it
     table = tabulate(

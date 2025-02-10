@@ -72,5 +72,5 @@ SOLVER:
     NORM_TYPE: 2.0
 
 
-OUTPUT_DIR: ../outputs/nsnet/
+OUTPUT_DIR: ../runs/nsnet/
 

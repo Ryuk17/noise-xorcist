@@ -9,7 +9,7 @@ from torchmetrics.audio.pesq import PerceptualEvaluationSpeechQuality
 from torchmetrics.audio.stoi import ShortTimeObjectiveIntelligibility
 import torch
 import torchaudio
-from torchmetrics import SignalNoiseRatio
+from torchmetrics.audio import SignalNoiseRatio
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ metrics_dict = {
 class Metrics(torch.nn.Module):
     def __init__(self, cfg, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.cfg = cfg
         self.nb_pesq = PerceptualEvaluationSpeechQuality(self.cfg["DATA"]["SAMPLE_RATE"], 'wb')
         self.stoi = ShortTimeObjectiveIntelligibility(self.cfg["DATA"]["SAMPLE_RATE"], False)
         self.snr = SignalNoiseRatio()

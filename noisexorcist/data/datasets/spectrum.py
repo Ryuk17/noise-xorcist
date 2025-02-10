@@ -66,28 +66,29 @@ class SpectrumDataset(Dataset):
 
     def __getitem__(self, idx):
         noisy_path = self.noisy_WAVs[idx]
-        clean_path = self.clean_dir.joinpath(noisy_path.name.split('+')[0] + '.wav')  # get the filename of the clean WAV from the filename of the noisy WAV
+        clean_path = self.clean_dir.joinpath(os.path.basename(noisy_path))  # get the filename of the clean WAV from the filename of the noisy WAV
         while True:
             try:
-                clean_waveform, _ = torchaudio.load(clean_path, normalization=2**15)
-                noisy_waveform, _ = torchaudio.load(noisy_path, normalization=2**15)
+                clean_waveform, _ = torchaudio.load(clean_path, normalize=True)
+                noisy_waveform, _ = torchaudio.load(noisy_path, normalize=True)
             except (RuntimeError, OSError):
                 continue
             break
 
         assert clean_waveform.shape[0] == 1 and noisy_waveform.shape[0] == 1, 'WAV file is not single channel!'
 
+        #NOTE(Ryuk): set return_complex=True
         window = build_window(self.window, self.n_fft)
-        x_stft = torch.stft(noisy_waveform.view(-1), n_fft=self.n_fft, hop_length=self.hop_len, win_length=self.n_fft, window=window)
-        y_stft = torch.stft(clean_waveform.view(-1), n_fft=self.n_fft, hop_length=self.hop_len, win_length=self.n_fft, window=window)
+        x_stft = torch.stft(noisy_waveform.view(-1), n_fft=self.n_fft, hop_length=self.hop_len, win_length=self.n_fft, window=window, return_complex=True)
+        y_stft = torch.stft(clean_waveform.view(-1), n_fft=self.n_fft, hop_length=self.hop_len, win_length=self.n_fft, window=window, return_complex=True)
 
-        x_ps = x_stft.pow(2).sum(-1)
+        x_ms = x_stft.abs()
+        x_ps = x_ms.pow(2)
         x_lps = LogTransform()(x_ps)
 
-        x_ms = x_ps.sqrt()
-        y_ms = y_stft.pow(2).sum(-1).sqrt()
+        y_ms = y_stft.abs()
 
-        noise_ms = (x_stft - y_stft).pow(2).sum(-1).sqrt()
+        noise_ms = (x_stft - y_stft).abs()
 
         # VAD
         y_ms_filtered = y_ms[self.VAD_frequencies]

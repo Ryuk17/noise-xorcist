@@ -99,7 +99,7 @@ def inference_on_dataset(cfg, model, data_loader, evaluator):
     """
     num_devices = comm.get_world_size()
     logger = logging.getLogger(__name__)
-    logger.info("Start inference on {} images".format(len(data_loader.dataset)))
+    logger.info("Start inference on {} samples".format(len(data_loader.dataset)))
 
     total = len(data_loader)  # inference data loader must have a fixed length
     evaluator.reset()

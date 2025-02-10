@@ -9,7 +9,7 @@ from torch.utils import data
 from noisexorcist.data.datasets import build_datasets
 
 
-def build_dataloader(cfg, split=True):
+def build_dataloader(cfg, split="train"):
     if split == "train":
         batch_size = cfg["TRAIN_BATCH_SIZE"]
         dir = cfg["TRAIN_DIR"]

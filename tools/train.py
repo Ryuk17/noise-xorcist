@@ -35,7 +35,7 @@ logger = logging.getLogger("noisexorcist")
 
 
 def get_evaluator(cfg, output_dir=None):
-    data_loader = build_dataloader(cfg, split="val")
+    data_loader = build_dataloader(cfg["DATA"], split="val")
     return data_loader, SeEvaluator(cfg, output_dir)
 
 
@@ -64,8 +64,7 @@ def do_test(cfg, model):
 
 
 def do_train(cfg, model, resume=False):
-    data_loader = build_dataloader(cfg["DATA"])
-    data_loader_iter = iter(data_loader)
+    data_loader = build_dataloader(cfg["DATA"], split="train")
 
     model.train()
     optimizer = build_optimizer(model, cfg["SOLVER"])
@@ -111,8 +110,9 @@ def do_train(cfg, model, resume=False):
     logger.info("Start training from epoch {}".format(start_epoch))
     with EventStorage(start_iter) as storage:
         for epoch in range(start_epoch, max_epoch):
+            data_loader_iter = iter(data_loader)
             storage.epoch = epoch
-            for _ in range(iters_per_epoch):
+            for i in range(iters_per_epoch):
                 data = next(data_loader_iter)
                 storage.iter = iteration
 
@@ -151,8 +151,8 @@ def do_train(cfg, model, resume=False):
                 scheduler["lr_sched"].step()
 
             if (
-                    cfg["DATA"]["TEST"]["EVAL_PERIOD"] > 0
-                    and (epoch + 1) % cfg["DATA"]["TEST"]["EVAL_PERIOD"] == 0
+                    cfg["DATA"]["TESTS"]["EVAL_PERIOD"] > 0
+                    and (epoch + 1) % cfg["DATA"]["TESTS"]["EVAL_PERIOD"] == 0
                     and iteration != max_iter - 1
             ):
                 results = do_test(cfg, model)

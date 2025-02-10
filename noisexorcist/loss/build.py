@@ -22,6 +22,7 @@ class Loss(nn.Module):
         super(Loss, self).__init__()
         self.cfg = cfg
         self.loss_list = {}
+        self.__build_loss()
 
     def __build_loss(self):
         for loss_name in self.cfg["NAME"]:
