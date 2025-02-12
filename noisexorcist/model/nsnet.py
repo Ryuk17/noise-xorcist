@@ -80,4 +80,5 @@ def build_nsnet(cfg):
                 get_unexpected_parameters_message(incompatible.unexpected_keys)
             )
 
+    model.to(torch.device(cfg["DEVICE"]))
     return model

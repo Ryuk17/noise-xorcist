@@ -21,9 +21,7 @@ def print_csv_format(results):
     logger = logging.getLogger(__name__)
 
     metrics = [k for k in results]
-    csv_results = [("", *list(results.values()))]
-    print(csv_results)
-
+    csv_results = [("value", *list(results.values()))]
 
     # tabulate it
     table = tabulate(

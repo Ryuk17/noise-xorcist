@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import torch
 
 from noisexorcist.data import select_inputs
-from noisexorcist.utils import comm
+from noisexorcist.utils import comm, device
 from noisexorcist.utils.logger import log_every_n_seconds
 
 
@@ -114,6 +114,7 @@ def inference_on_dataset(cfg, model, data_loader, evaluator):
                 total_compute_time = 0
 
             start_compute_time = time.perf_counter()
+            data = device.to_device(data, cfg["MODEL"]["DEVICE"])
             model_inputs = select_inputs(cfg, data)
             model_outputs = model(model_inputs)
 

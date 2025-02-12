@@ -23,7 +23,7 @@ from noisexorcist.evaluation.testing import flatten_results_dict
 from noisexorcist.solver import build_lr_scheduler, build_optimizer
 from noisexorcist.utils.checkpoint import Checkpointer, PeriodicCheckpointer
 from noisexorcist.evaluation import inference_on_dataset, print_csv_format, SeEvaluator
-from noisexorcist.utils import comm
+from noisexorcist.utils import comm, device
 from noisexorcist.utils.events import (
     CommonMetricPrinter,
     EventStorage,
@@ -114,6 +114,7 @@ def do_train(cfg, model, resume=False):
             storage.epoch = epoch
             for i in range(iters_per_epoch):
                 data = next(data_loader_iter)
+                data = device.to_device(data, cfg["MODEL"]["DEVICE"])
                 storage.iter = iteration
 
                 model_inputs = select_inputs(cfg, data)

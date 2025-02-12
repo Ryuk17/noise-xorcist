@@ -28,7 +28,7 @@ def restore_waveform(cfg, data, model_outputs):
             denoised_stft_hat = torch.stack([noisy_ms_hat * torch.cos(torch.angle(data["x_stft"])),
                                       noisy_ms_hat * torch.sin(torch.angle(data["x_stft"]))], dim=-1)
 
-            window = build_window(cfg["DATA"]["WIN_TYPE"], cfg["DATA"]["N_FFT"])
+            window = build_window(cfg["DATA"]["WIN_TYPE"], cfg["DATA"]["N_FFT"]).to(torch.device(cfg["MODEL"]["DEVICE"]))
             clean_waveform = torch.istft(
                 clean_stft, cfg["DATA"]["N_FFT"], hop_length=cfg["DATA"]["HOP_LEN"],
                 win_length=cfg["DATA"]["N_FFT"], window=window)
