@@ -37,8 +37,13 @@ DATA:
   VAL_BATCH_SIZE: 4
 
   TESTS:
-    METRICS: ["PESQ", "STOI", "SNR", ]
-    EVAL_PERIOD: 1
+    METRICS: ["SNR", ]
+
+    SNR:
+      SCALE: 1.
+      ALPHA: 0.4
+      EPS: 1e-7
+    EVAL_PERIOD: 10
 
 
 SOLVER:

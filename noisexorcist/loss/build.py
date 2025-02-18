@@ -30,12 +30,12 @@ class Loss(nn.Module):
             self.loss_list[loss_name] = [obj, self.cfg[loss_name]["SCALE"]]
 
     def forward(self, inputs, data):
-        loss_dict = {}
+        loss_value = {}
         for loss_name in self.loss_list.keys():
             sub_loss = self.loss_list[loss_name][0](inputs, data) * self.loss_list[loss_name][1]
-            loss_dict[loss_name] = sub_loss
+            loss_value[loss_name] = sub_loss
 
-        return loss_dict
+        return loss_value
 
 
 
