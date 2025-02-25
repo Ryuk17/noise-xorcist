@@ -6,7 +6,7 @@
 
 import logging
 import math
-
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -14,32 +14,19 @@ from noisexorcist.utils.checkpoint import get_missing_parameters_message, get_un
 
 logger = logging.getLogger(__name__)
 
+# fix random seed
+torch.manual_seed(0)
+torch.cuda.manual_seed_all(0)
+np.random.seed(0)
+
 
 class NSNetModel(nn.Module):
     def __init__(self, input_dim, n_gru_layers, gru_dropout):
         super(NSNetModel, self).__init__()
-        self.n_frequency_bins = input_dim
-        self.n_gru_layers = n_gru_layers
-        self.gru_dropout = gru_dropout
+        self.gru = nn.GRU(input_size=input_dim, hidden_size=input_dim, num_layers=n_gru_layers,
+                          batch_first=True, dropout=gru_dropout)
+        self.dense = nn.Linear(in_features=input_dim, out_features=input_dim)
 
-        # build model
-        self.__build_model()
-
-    # ---------------------
-    # MODEL SETUP
-    # ---------------------
-    def __build_model(self):
-        """
-        Layout model
-        :return:
-        """
-        self.gru = nn.GRU(input_size=self.n_frequency_bins, hidden_size=self.n_frequency_bins, num_layers=self.n_gru_layers,
-                          batch_first=True, dropout=self.gru_dropout)
-        self.dense = nn.Linear(in_features=self.n_frequency_bins, out_features=self.n_frequency_bins)
-
-    # ---------------------
-    # TRAINING
-    # ---------------------
     def forward(self, x):
         x = x.permute(0, 2, 1)  # (batch_size, time, n_frequency_bins)
         x, _ = self.gru(x)  # (batch_size, time, n_frequency_bins)
@@ -49,16 +36,9 @@ class NSNetModel(nn.Module):
         return x
 
 
-def build_nsnet(cfg):
-    # fmt: off
-    input_dim = cfg["INPUT_DIM"]
-    n_gru_layers = cfg["GRU_LAYERS"]
-    gru_dropout = cfg["GRU_DROPOUT"]
-    pretrain_path = cfg["PRETRAIN_PATH"]
-    # fmt: on
+def build_nsnet(device, pretrain_path, input_dim, n_gru_layers, gru_dropout):
 
     model = NSNetModel(input_dim, n_gru_layers, gru_dropout)
-
     if pretrain_path:
         try:
             state_dict = torch.load(pretrain_path, map_location=torch.device('cpu'))
@@ -80,5 +60,5 @@ def build_nsnet(cfg):
                 get_unexpected_parameters_message(incompatible.unexpected_keys)
             )
 
-    model.to(torch.device(cfg["DEVICE"]))
+    model.to(torch.device(device))
     return model

@@ -2,13 +2,8 @@
 CUDNN_BENCHMARK: True
 
 MODEL:
-  DEVICE: "cuda"
-  NAME: NSNET
-  INPUT_DIM: 129
-  GRU_LAYERS: 3
-  GRU_DROPOUT: 0.5
-  PRETRAIN_PATH:
-  WEIGHTS:
+  NAME: nsnet
+  PARAMS: ["cuda", None, 129, 3, 0.5]
 
 LOSSES:
   NAME: ["WSD", ]
