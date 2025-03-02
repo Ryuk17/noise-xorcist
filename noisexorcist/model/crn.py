@@ -5,21 +5,16 @@
 """
 
 import logging
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.autograd as autograd
-from torch.autograd import Variable
-import torch.nn.functional as F
-import os
-import numpy as np
-from noisexorcist.utils.checkpoint import get_missing_parameters_message, get_unexpected_parameters_message
 
+logger = logging.getLogger(__name__)
 
 # fix random seed
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 np.random.seed(0)
-logger = logging.getLogger(__name__)
 
 
 class Encoder(nn.Module):
@@ -108,9 +103,9 @@ class Chomp_T(nn.Module):
         return x[:, :, 0:-self.chomp_t, :]
 
 
-class CrnNetModel(nn.Module):
+class CrnModel(nn.Module):
     def __init__(self, lstm_hidden_dim, n_lstm_layers):
-        super(CrnNetModel, self).__init__()
+        super(CrnModel, self).__init__()
         self.en = Encoder()
         self.lstm = nn.LSTM(lstm_hidden_dim, lstm_hidden_dim, n_lstm_layers, batch_first=True)
         self.de = Decoder()
@@ -128,30 +123,6 @@ class CrnNetModel(nn.Module):
         return x
 
 
-def build_crnnet(device, pretrain_path, lstm_hidden_dim, n_lstm_layers):
-
-    model = CrnNetModel(lstm_hidden_dim, n_lstm_layers)
-
-    if pretrain_path:
-        try:
-            state_dict = torch.load(pretrain_path, map_location=torch.device('cpu'))
-            logger.info(f"Loading pretrained model from {pretrain_path}")
-        except FileNotFoundError as e:
-            logger.info(f'{pretrain_path} is not found! Please check this path.')
-            raise e
-        except KeyError as e:
-            logger.info("State dict keys error! Please check the state dict.")
-            raise e
-
-        incompatible = model.load_state_dict(state_dict, strict=False)
-        if incompatible.missing_keys:
-            logger.info(
-                get_missing_parameters_message(incompatible.missing_keys)
-            )
-        if incompatible.unexpected_keys:
-            logger.info(
-                get_unexpected_parameters_message(incompatible.unexpected_keys)
-            )
-
-    model.to(torch.device(device))
+def build_crn(lstm_hidden_dim, n_lstm_layers):
+    model = CrnModel(lstm_hidden_dim, n_lstm_layers)
     return model

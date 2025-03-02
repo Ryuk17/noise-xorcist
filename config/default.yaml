@@ -3,7 +3,9 @@ CUDNN_BENCHMARK: True
 
 MODEL:
   NAME: nsnet
-  PARAMS: ["cuda", None, 129, 3, 0.5]
+  PRETRAIN: None
+  DEVICE: "cuda"
+  PARAMS: [129, 3, 0.5]
 
 LOSSES:
   NAME: ["WSD", ]
