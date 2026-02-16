@@ -2,9 +2,17 @@
 Author: Ryuk
 Date: 2026-02-15 17:10:24
 LastEditors: Ryuk
-LastEditTime: 2026-02-15 19:06:27
+LastEditTime: 2026-02-16 16:49:08
 Description: First create
 '''
+
+import sys
+from pathlib import Path
+
+# 将当前文件的上两级目录（即项目根目录）加入搜索路径
+root_path = str(Path(__file__).resolve().parent.parent)
+if root_path not in sys.path:
+    sys.path.append(root_path)
 
 from base import BaseDenoiser
 from noise_estimation.mcra import MCRANoiseEstimator
@@ -99,7 +107,7 @@ class MCRASpectralSubtractive(BaseDenoiser):
 
 if __name__ == "__main__":
     # 加载音频
-    noisy_audio, sr = librosa.load("noisy_speech.wav", sr=None)
+    noisy_audio, sr = librosa.load("../samples/audio_long16noise.wav", sr=None)
     
     # 初始化噪声估计器和谱增益计算器
     noise_estimator = MCRANoiseEstimator(n_fft=512)
@@ -112,4 +120,4 @@ if __name__ == "__main__":
     enhanced_audio = denoiser.process(noisy_audio)
     
     # 保存结果
-    sf.write("enhanced_speech.wav", enhanced_audio, sr)
+    sf.write("../samples/MCRASpectralSubtractive.wav", enhanced_audio, sr)

@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-15 16:33:45
 LastEditors: Ryuk
-LastEditTime: 2026-02-15 17:07:43
+LastEditTime: 2026-02-16 16:50:50
 Description: First create
 '''
 
@@ -18,6 +18,7 @@ class MCRANoiseEstimator(BaseNoiseEstimator):
         self.ap = alpha_p
         self.L = L
         self.delta = delta
+        self.n_fft = n_fft
         
         # 状态变量：根据 FFT 频点数初始化
         num_bins = n_fft // 2 + 1
