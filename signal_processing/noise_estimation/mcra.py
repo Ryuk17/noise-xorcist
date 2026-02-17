@@ -2,15 +2,20 @@
 Author: Ryuk
 Date: 2026-02-15 16:33:45
 LastEditors: Ryuk
-LastEditTime: 2026-02-16 16:50:50
+LastEditTime: 2026-02-17 15:31:46
 Description: First create
 '''
 
-from base import BaseNoiseEstimator
-
 import numpy as np
 
+from base import BaseNoiseEstimator
+
 class MCRANoiseEstimator(BaseNoiseEstimator):
+    """
+    Rangachari, S. and Loizou, P. (2006). A noise estimation algorithm  for 
+	highly nonstationary environments. Speech Communication, 28, 220-231.
+    """
+   
     def __init__(self, n_fft, alpha_s=0.8, alpha_d=0.95, alpha_p=0.2, L=100, delta=5):
         super().__init__()
         self.as_ = alpha_s
@@ -21,13 +26,13 @@ class MCRANoiseEstimator(BaseNoiseEstimator):
         self.n_fft = n_fft
         
         # 状态变量：根据 FFT 频点数初始化
-        num_bins = n_fft // 2 + 1
+        self.fft_bins = n_fft // 2 + 1
         self.n = 1
-        self.pk = np.zeros(num_bins)
-        self.P = np.zeros(num_bins)
-        self.Pmin = np.zeros(num_bins)
-        self.Ptmp = np.zeros(num_bins)
-        self.noise_ps = np.zeros(num_bins)
+        self.pk = np.zeros(self.fft_bins)
+        self.P = np.zeros(self.fft_bins)
+        self.Pmin = np.zeros(self.fft_bins)
+        self.Ptmp = np.zeros(self.fft_bins)
+        self.noise_ps = np.zeros(self.fft_bins)
         self._initialized = False
 
     def estimate_noise(self, frame_psd):

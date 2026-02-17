@@ -1,0 +1,10 @@
+test_dataset: 
+  noisy_dir: /data/ssd0/xiaobin.rong/Datasets/DNS3/test_noisy/
+  clean_dir: /data/ssd0/xiaobin.rong/Datasets/DNS3/test_clean/
+
+network:
+  exp_path: /data/ssd0/xiaobin.rong/study_se/DNS3/exp_gtcrn_2025-03-31-11h26m
+  config: ${network.exp_path}/config.yaml
+  ckpt_name: model_001
+  checkpoint: ${network.exp_path}/checkpoints/${network.ckpt_name}.tar
+  enh_folder: ${network.exp_path}/${network.ckpt_name}/enhanced

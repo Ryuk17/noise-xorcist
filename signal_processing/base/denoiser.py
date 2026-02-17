@@ -2,11 +2,12 @@
 Author: Ryuk
 Date: 2026-02-15 16:27:15
 LastEditors: Ryuk
-LastEditTime: 2026-02-15 17:02:52
+LastEditTime: 2026-02-17 15:42:34
 Description: First create
 '''
 
-
+import numpy as np
+from scipy.fftpack import fft, ifft
 
 class BaseNoiseEstimator:
     """
@@ -54,52 +55,80 @@ class BaseSpectralGainEstimator:
     
 
 class BaseDenoiser:
-    """
-    组合降噪算法基类
-    """
+    def __init__(self, noise_estimator, spectral_gain_estimator, frame_size=320, hop_size=160):
+        self.frame_size = frame_size
+        self.hop_size = hop_size
 
-    def __init__(self, noise_estimator: BaseNoiseEstimator, spectral_gain: BaseSpectralGainEstimator):
+        assert noise_estimator.n_fft == spectral_gain_estimator.n_fft
+        self.n_fft = noise_estimator.n_fft
+        self.win = np.hamming(frame_size)
+        
+        # 用于存储重叠相加的状态（如果是流式处理，这很重要）
+        self._prev_overlap = np.zeros(self.frame_size)
+
+    def process_frame(self, frame_time_domain):
         """
-        初始化降噪算法
+        核心方法：按帧处理时域信号并返回处理后的时域帧
         
         参数:
-            noise_estimator (BaseNoiseEstimator): 噪声估计器实例
-            spectral_gain (BaseSpectralGain): 谱增益计算器实例
-        """
-        self.noise_estimator = noise_estimator
-        self.spectral_gain = spectral_gain
-
-    def denoise(self, signal):
-        """
-        执行降噪的主方法
-        
-        参数:
-            signal (array-like): 输入信号
-            
+            frame_time_domain (ndarray): 长度为 self.frame_size 的时域信号
         返回:
-            denoised_signal (array-like): 降噪后的信号
+            enhanced_frame (ndarray): 降噪后的时域信号帧
         """
-        # 步骤1：估计噪声
-        noise_estimate = self.noise_estimator.estimate_noise(signal)
-
-        # 步骤2：计算谱增益
-        gain = self.spectral_gain.compute_gain(signal, noise_estimate)
-
-        # 步骤3：应用谱增益进行降噪
-        denoised_signal = self._apply_gain(signal, gain)
-
-        return denoised_signal
-
-    def _apply_gain(self, signal, gain):
-        """
-        应用谱增益到信号上（可被子类重写）
+        # 1. 加窗与 FFT
+        windowed_frame = frame_time_domain * self.win
+        spec = fft(windowed_frame, self.n_fft)
         
-        参数:
-            signal (array-like): 输入信号
-            gain (array-like): 谱增益
-            
-        返回:
-            result (array-like): 应用增益后的结果
+        # 获取正频率部分 (0 到 fs/2)
+        half_idx = self.n_fft // 2 + 1
+        spec_half = spec[:half_idx]
+        mag = np.abs(spec_half)
+        phase = np.angle(spec_half)
+        psd = mag ** 2
+        
+        # 2. 估计噪声 (调用组件)
+        noise_estimate = self.noise_estimator.estimate_noise(psd)
+
+        # 3. 计算谱增益 (调用组件)
+        gain = self.spectral_gain.compute_gain(psd, noise_estimate)
+
+        # 4. 应用增益
+        # 这里的 _apply_gain 是你在基类中定义的，或者是为了处理复数谱重写的
+        complex_spec_half = mag * np.exp(1j * phase)
+        enhanced_spec_half = self._apply_gain(complex_spec_half, gain)
+        
+        # 5. 重构全谱并 IFFT
+        # 拼接共轭对称部分以保证 IFFT 结果为实数
+        enhanced_spec_full = np.concatenate([
+            enhanced_spec_half, 
+            np.conj(enhanced_spec_half[-2:0:-1])
+        ])
+        enhanced_frame = np.real(ifft(enhanced_spec_full))[:self.frame_size]
+        
+        return enhanced_frame
+
+    def process(self, signal):
         """
-        # 默认实现为逐元素相乘
-        return signal * gain
+        批处理方法：处理整段音频信号
+        """
+        num_samples = len(signal)
+        num_frames = (num_samples - self.frame_size) // self.hop_size
+        output = np.zeros(num_samples)
+        
+        # 重置流式状态（针对单次全量处理）
+        self._prev_overlap.fill(0)
+        
+        for n in range(num_frames):
+            idx = n * self.hop_size
+            current_frame = signal[idx : idx + self.frame_size]
+            
+            # 调用新增的按帧处理函数
+            enhanced_frame = self.process_frame(current_frame)
+            
+            # 重叠相加 (Overlap-Add)
+            output[idx : idx + self.hop_size] = (
+                self._prev_overlap[:self.hop_size] + enhanced_frame[:self.hop_size]
+            )
+            self._prev_overlap = enhanced_frame[self.hop_size:]
+            
+        return output

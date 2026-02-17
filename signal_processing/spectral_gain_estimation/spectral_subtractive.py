@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-15 17:08:57
 LastEditors: Ryuk
-LastEditTime: 2026-02-15 17:22:49
+LastEditTime: 2026-02-17 15:19:32
 Description: First create
 '''
 
@@ -14,6 +14,7 @@ class BeroutiGainEstimator(BaseSpectralGainEstimator):
     def __init__(self, n_fft, alpha=2.0, floor=0.002):
         super().__init__()
         self.n_fft = n_fft
+        self.fft_bins = n_fft // 2 + 1
         self.alpha = alpha  # 1.0 为幅值减，2.0 为功率减
         self.floor = floor
 
