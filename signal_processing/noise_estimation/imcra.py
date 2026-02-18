@@ -14,7 +14,7 @@ import numpy as np
 
 from base import BaseNoiseEstimator
 
-class IMCRA(BaseNoiseEstimator):
+class IMCRANoiseEstimator(BaseNoiseEstimator):
     """
     Cohen, I. (2003). Noise spectrum estimation in adverse environments: 
 	Improved minima controlled recursive averaging. IEEE Transactions on Speech 

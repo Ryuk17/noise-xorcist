@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-15 16:27:15
 LastEditors: Ryuk
-LastEditTime: 2026-02-17 15:42:34
+LastEditTime: 2026-02-17 20:17:04
 Description: First create
 '''
 
@@ -39,13 +39,13 @@ class BaseSpectralGainEstimator:
     def __init__(self):
         pass
 
-    def compute_gain(self, signal, noise_estimate):
+    def compute_gain(self, frame_psd, noise_psd):
         """
         计算谱增益的抽象方法
         
         参数:
-            signal (array-like): 输入信号
-            noise_estimate (array-like): 估计的噪声
+            frame_psd (array-like): 当前帧的功率谱
+            noise_psd (array-like): 估计的噪声功率谱
             
         返回:
             gain (array-like): 计算得到的谱增益

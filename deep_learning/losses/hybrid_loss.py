@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class HybridLoss(nn.Module):
@@ -51,55 +52,7 @@ class HybridLoss(nn.Module):
         return self.lamda_ri*(real_loss + imag_loss) + self.lamda_mag*mag_loss + sisnr
 
 
-class STFTLoss(nn.Module):
-    def __init__(self, n_fft=1024, hop_len=120, win_len=600, window="hann_window"):
-        super().__init__()
-        self.n_fft = n_fft
-        self.hop_len = hop_len
-        self.win_len = win_len
-        self.register_buffer("window", getattr(torch, window)(win_len))
 
-    def loss_spectral_convergence(self, x_mag, y_mag):
-        return torch.norm(y_mag - x_mag, p="fro") / torch.norm(y_mag, p="fro")
-
-    def loss_log_magnitude(self, x_mag, y_mag):
-        return torch.nn.functional.l1_loss(torch.log(y_mag), torch.log(x_mag))
-
-    def forward(self, x, y):
-        """x, y: (B, T), in time domain"""
-        x = torch.stft(x, self.n_fft, self.hop_len, self.win_len, self.window.to(x.device), return_complex=True)
-        y = torch.stft(y, self.n_fft, self.hop_len, self.win_len, self.window.to(x.device), return_complex=True)
-        x_mag = torch.abs(x).clamp(1e-8)
-        y_mag = torch.abs(y).clamp(1e-8)
-        
-        sc_loss = self.loss_spectral_convergence(x_mag, y_mag)
-        mag_loss = self.loss_log_magnitude(x_mag, y_mag)
-        loss = sc_loss + mag_loss
-
-        return loss
-
-
-class MultiResolutionSTFTLoss(nn.Module):
-    def __init__(
-        self,
-        fft_sizes=[2048, 1024, 512],
-        hop_sizes=[240, 120, 50],
-        win_lengths=[1200, 600, 240],
-        window="hann_window",
-    ):
-        super().__init__()
-        assert len(fft_sizes) == len(hop_sizes) == len(win_lengths)
-        self.stft_losses = nn.ModuleList()
-        for fs, hs, wl in zip(fft_sizes, hop_sizes, win_lengths):
-            self.stft_losses += [STFTLoss(fs, hs, wl, window)]
-
-    def forward(self, x, y):
-        loss = 0.0
-        for f in self.stft_losses:
-            loss += f(x, y)
-        loss /= len(self.stft_losses)
-        return loss
-    
 
 
 if __name__=='__main__':

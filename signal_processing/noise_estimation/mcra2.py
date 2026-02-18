@@ -10,7 +10,7 @@ import numpy as np
 
 from base import BaseNoiseEstimator
 
-class MCRA2(BaseNoiseEstimator):
+class MCRA2NoiseEstimator(BaseNoiseEstimator):
     """
     Cohen, I. (2002). Noise estimation by minima controlled recursive averaging 
 	for robust speech enhancement. IEEE Signal Processing Letters, 9(1), 12-15.
