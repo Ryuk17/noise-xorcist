@@ -13,7 +13,7 @@ import numpy as np
 import scipy.io.wavfile as wav
 
 
-class WienerEstimator(BaseSpectralGainEstimator):
+class WienerSpectralGainEstimator(BaseSpectralGainEstimator):
     """
         Scalart, P. and Filho, J. (1996). Speech enhancement based on a priori 
         signal to noise estimation. Proc. IEEE Int. Conf. Acoust. , Speech, Signal 

@@ -10,7 +10,7 @@ from base import BaseSpectralGainEstimator
 
 import numpy as np
 
-class BeroutipectralGainEstimator(BaseSpectralGainEstimator):
+class BeroutiSpectralGainEstimator(BaseSpectralGainEstimator):
     def __init__(self, n_fft, alpha=2.0, floor=0.002):
         super().__init__()
         self.n_fft = n_fft

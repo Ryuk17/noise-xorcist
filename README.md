@@ -1,11 +1,11 @@
-![noise-xorcist](./assets/icon.png)
+![noise-xorcist](./assets/icon-224.png)
 # noise-xorcist 
 noise-xorcist is a unified single-channel speech enhancement toolbox, which incorporates a variety of traditional signal processing algorithms and modern deep learning-based methods. Notice: The code is still under development and some parts not yet ready for use.
 
 ## Singal processing
   
 ### noise estimitation  
-- [√] minimum statistics algorithm 
+- [√] Minimum statistics algorithm 
 - [√] MCRA algorithm
 - [√] MCRA2 algorithm
 - [√] IMCRA algorithm
@@ -16,7 +16,7 @@ noise-xorcist is a unified single-channel speech enhancement toolbox, which inco
 
 
 ### spectral gain estimation
-- [√] spectral substractive
+- [√] Spectral substractive
 - [√] MMSE
 - [√] LogMMSE
 - [√] LogMMSE SPU
