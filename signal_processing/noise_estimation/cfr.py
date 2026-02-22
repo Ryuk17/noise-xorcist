@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-17 15:47:46
 LastEditors: Ryuk
-LastEditTime: 2026-02-22 18:28:01
+LastEditTime: 2026-02-22 18:48:20
 Description: First create
 '''
 
@@ -14,9 +14,9 @@ from scipy.signal.windows import triang
 
 class CFRNoiseEstimator(BaseNoiseEstimator):
     """
-    Sorensen, K. and Andersen, S. (2005). Speech enhancement with natural 
-	sounding residual noise based on connected time-frequency speech presence 
-	regions. EURASIP J. Appl. Signal Process., 18, 2954-2964.
+        Sorensen, K. and Andersen, S. (2005). Speech enhancement with natural 
+        sounding residual noise based on connected time-frequency speech presence 
+        regions. EURASIP J. Appl. Signal Process., 18, 2954-2964.
     """
 
     def __init__(self, n_fft, D=7, U=5, V=8, gamma1=6, gamma2=0.5, 
@@ -59,22 +59,22 @@ class CFRNoiseEstimator(BaseNoiseEstimator):
         # 使用 numpy.convolve 实现，mode='same' 保证输出长度不变
         return np.convolve(x, self.b, mode='same')
 
-    def estimate_noise(self, ns_ps):
+    def estimate_noise(self, frame_psd):
         if not self._is_initialized:
-            self.noise_ps = ns_ps.copy()
-            self.Pmin = ns_ps.copy()
-            self.Pmin_sw = ns_ps.copy()
-            self.SmthdP = ns_ps.copy()
-            self.stored_min[:] = np.tile(ns_ps[:, np.newaxis], (1, self.U))
+            self.noise_ps = frame_psd.copy()
+            self.Pmin = frame_psd.copy()
+            self.Pmin_sw = frame_psd.copy()
+            self.SmthdP = frame_psd.copy()
+            self.stored_min[:] = np.tile(frame_psd[:, np.newaxis], (1, self.U))
             self._is_initialized = True
             return self.noise_ps
 
         # --- 步骤 1: 谱域平滑 ---
-        P_y = self._spectral_smoothing(ns_ps)
+        P_y = self._spectral_smoothing(frame_psd)
 
         # --- 步骤 2: 计算自适应平滑因子 alpha ---
         # R 为平滑谱与原始谱的能量比
-        R = np.sum(self.SmthdP) / (np.sum(ns_ps) + self.eps)
+        R = np.sum(self.SmthdP) / (np.sum(frame_psd) + self.eps)
         alpha_c_tild = 1.0 / (1.0 + (R - 1.0)**2)
         self.alpha_c = self.alpha_c * 0.7 + 0.3 * max(alpha_c_tild, 0.7)
         
@@ -113,7 +113,7 @@ class CFRNoiseEstimator(BaseNoiseEstimator):
 
         # --- 步骤 5: 更新噪声估计 ---
         # 默认使用原始周期图 ns_ps，但在判定为语音的频点使用 Bias * Pmin 替换
-        self.noise_ps = ns_ps.copy()
+        self.noise_ps = frame_psd.copy()
         self.noise_ps[Decision] = Rmin * self.Pmin[Decision]
 
         # --- 步骤 6: 最小值追踪 (子窗口滑动) ---

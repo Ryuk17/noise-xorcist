@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-15 17:10:24
 LastEditors: Ryuk
-LastEditTime: 2026-02-22 18:34:07
+LastEditTime: 2026-02-22 18:45:25
 Description: First create
 '''
 
@@ -95,4 +95,4 @@ if __name__ == "__main__":
     enhanced_audio = denoiser.process(noisy_audio)
     
     # 保存结果
-    sf.write("./samples/MCRASpectralSubtraction.wav", enhanced_audio, sr)
+    sf.write("./samples/MCRANoiseEstimator-SSSpectralGainEstimator.wav", enhanced_audio, sr)

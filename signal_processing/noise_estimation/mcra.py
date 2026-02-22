@@ -12,8 +12,8 @@ from ..base import BaseNoiseEstimator
 
 class MCRANoiseEstimator(BaseNoiseEstimator):
     """
-    Rangachari, S. and Loizou, P. (2006). A noise estimation algorithm  for 
-	highly nonstationary environments. Speech Communication, 28, 220-231.
+        Rangachari, S. and Loizou, P. (2006). A noise estimation algorithm  for 
+        highly nonstationary environments. Speech Communication, 28, 220-231.
     """
    
     def __init__(self, n_fft, alpha_s=0.8, alpha_d=0.95, alpha_p=0.2, L=100, delta=5):
