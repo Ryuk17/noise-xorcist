@@ -8,7 +8,7 @@ Description: First create
 
 import numpy as np
 from scipy.special import exp1
-from base import BaseSpectralGainEstimator
+from ..base import BaseSpectralGainEstimator
 
 
 class OMLSASpectralGainEstimator(BaseSpectralGainEstimator):

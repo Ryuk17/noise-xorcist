@@ -10,7 +10,7 @@ from .logmmse_spu import LogMMSESpuSpectralEstimator
 from .logmmse import LogMMSESpectralEstimator
 from .mmse import MMSESpectralEstimator
 from .omlsa import OMLSASpectralGainEstimator
-from .spectral_subtractive import BeroutiSpectralGainEstimator
+from .spectral_subtraction import SSSpectralGainEstimator
 from .stsa_mis import STSAMisSpectralGainEstimator
 from .stsa_wcosh import STSAWCoshSpectralGainEstimator
 from .stsa_weuclid import STSAWeuclidSpectralGainEstimator
@@ -22,7 +22,7 @@ __all__ = [
     'LogMMSESpectralEstimator',
     'MMSESpectralEstimator',
     'OMLSASpectralGainEstimator',
-    'BeroutiSpectralGainEstimator',
+    'SSSpectralGainEstimator',
     'STSAMisSpectralGainEstimator',
     'STSAWCoshSpectralGainEstimator',
     'STSAWeuclidSpectralGainEstimator',

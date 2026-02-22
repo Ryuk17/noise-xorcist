@@ -5,7 +5,7 @@ LastEditors: Ryuk
 LastEditTime: 2026-02-18 13:41:19
 Description: First create
 '''
-from base import BaseSpectralGainEstimator
+from ..base import BaseSpectralGainEstimator
 
 import numpy as np
 from scipy.special import gamma, hyp1f1

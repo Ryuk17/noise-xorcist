@@ -16,7 +16,7 @@ noise-xorcist is a unified single-channel speech enhancement toolbox, which inco
 
 
 ### spectral gain estimation
-- [Spectral substractive](./signal_processing/spectral_gain_estimation/spectral_subtractive.py)
+- [Spectral substractive](./signal_processing/spectral_gain_estimation/spectral_subtraction.py)
 - [MMSE](./signal_processing/spectral_gain_estimation/mmse.py)
 - [LogMMSE](./signal_processing/spectral_gain_estimation/logmmse.py)
 - [LogMMSE SPU](./signal_processing/spectral_gain_estimation/logmmse_spu.py)

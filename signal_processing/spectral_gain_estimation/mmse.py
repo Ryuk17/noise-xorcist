@@ -6,7 +6,7 @@ LastEditTime: 2026-02-18 12:50:08
 Description: First create
 '''
 
-from base import BaseSpectralGainEstimator
+from ..base import BaseSpectralGainEstimator
 
 import numpy as np
 from scipy.special import i0e, i1e

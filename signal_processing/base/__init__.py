@@ -6,7 +6,7 @@ LastEditTime: 2026-02-15 16:38:30
 Description: First create
 '''
 
-from .denoiser import BaseNoiseEstimator, BaseSpectralGainEstimator, BaseDenoiser
+from .denoiser import BaseNoiseEstimator, BaseSpectralGainEstimator
 
-__all__ = ['BaseNoiseEstimator', 'BaseSpectralGainEstimator', 'BaseDenoiser']
+__all__ = ['BaseNoiseEstimator', 'BaseSpectralGainEstimator']
 

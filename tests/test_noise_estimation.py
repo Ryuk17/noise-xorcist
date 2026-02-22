@@ -14,7 +14,7 @@ root_path = str(Path(__file__).resolve().parent.parent)
 if root_path not in sys.path:
     sys.path.append(root_path)
 
-from base import BaseDenoiser
+from ..base import BaseDenoiser
 from noise_estimation import (
     CFRNoiseEstimator,
     CSMTNoiseEstimator,

@@ -8,7 +8,7 @@ Description: First create
 
 import numpy as np
 
-from base import BaseNoiseEstimator
+from ..base import BaseNoiseEstimator
 
     
 class SPPNoiseEstimator(BaseNoiseEstimator):

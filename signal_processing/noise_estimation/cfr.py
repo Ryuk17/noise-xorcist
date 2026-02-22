@@ -2,12 +2,12 @@
 Author: Ryuk
 Date: 2026-02-17 15:47:46
 LastEditors: Ryuk
-LastEditTime: 2026-02-18 12:59:38
+LastEditTime: 2026-02-22 18:28:01
 Description: First create
 '''
 
 import numpy as np
-from base import BaseNoiseEstimator
+from ..base import BaseNoiseEstimator
 
 import numpy as np
 from scipy.signal.windows import triang

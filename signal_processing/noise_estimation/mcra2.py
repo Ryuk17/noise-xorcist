@@ -2,13 +2,13 @@
 Author: Ryuk
 Date: 2026-02-17 15:21:05
 LastEditors: Ryuk
-LastEditTime: 2026-02-17 15:28:16
+LastEditTime: 2026-02-22 18:28:54
 Description: First create
 '''
 
 import numpy as np
 
-from base import BaseNoiseEstimator
+from ..base import BaseNoiseEstimator
 
 class MCRA2NoiseEstimator(BaseNoiseEstimator):
     """

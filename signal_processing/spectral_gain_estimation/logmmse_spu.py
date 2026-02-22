@@ -6,7 +6,7 @@ LastEditTime: 2026-02-18 13:01:15
 Description: First create
 '''
 
-from base import BaseSpectralGainEstimator
+from ..base import BaseSpectralGainEstimator
 import numpy as np
 import scipy.io.wavfile as wav
 from scipy.special import exp1, i0

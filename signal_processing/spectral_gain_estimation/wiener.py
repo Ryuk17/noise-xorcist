@@ -7,7 +7,7 @@ Description: First create
 '''
 
 
-from base import BaseSpectralGainEstimator
+from ..base import BaseSpectralGainEstimator
 
 import numpy as np
 import scipy.io.wavfile as wav

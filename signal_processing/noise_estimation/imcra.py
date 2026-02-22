@@ -12,7 +12,7 @@ from scipy.special import exp1 # 对应 MATLAB 的 expint
 
 import numpy as np
 
-from base import BaseNoiseEstimator
+from ..base import BaseNoiseEstimator
 
 class IMCRANoiseEstimator(BaseNoiseEstimator):
     """
