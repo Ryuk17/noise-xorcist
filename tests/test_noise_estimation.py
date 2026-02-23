@@ -72,7 +72,7 @@ class TestNoiseEstimator:
             
             frame_psd = np.abs(spectrum) ** 2
             noise_psd = self.noise_estimator.estimate_noise(frame_psd)
-            gain = self.spectral_gain_estimator.compute_gain(frame_psd, noise_psd)
+            gain, vad = self.spectral_gain_estimator.compute_gain(frame_psd, noise_psd)
             
             # 应用增益
             processed_spectrum = spectrum * gain

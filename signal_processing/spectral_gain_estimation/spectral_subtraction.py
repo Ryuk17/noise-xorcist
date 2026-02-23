@@ -29,7 +29,7 @@ class SSSpectralGainEstimator(BaseSpectralGainEstimator):
         sub_res = frame_psd - noise_psd
         sub_res[sub_res < 0] = 0
         gain = (sub_res / (frame_psd + self.eps)) ** (1.0 / self.alpha)
-        return gain
+        return gain, None
 
     def berouti_spectral_subtraction(self, frame_psd, noise_psd):
 
@@ -59,4 +59,4 @@ class SSSpectralGainEstimator(BaseSpectralGainEstimator):
         
         # 计算增益因子 G = 估计幅值 / 带噪幅值
         gain = (sub_res / (signal_part + self.eps)) ** (1.0 / self.alpha)
-        return gain
+        return gain, None

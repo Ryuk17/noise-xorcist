@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-18 12:55:24
 LastEditors: Ryuk
-LastEditTime: 2026-02-18 13:55:55
+LastEditTime: 2026-02-23 22:32:58
 Description: First create
 '''
 
@@ -18,18 +18,18 @@ class STSAMisSpectralGainEstimator(BaseSpectralGainEstimator):
         and Audio Processing, 13(5), 857-869.
     """
 
-    def __init__(self, aa=0.98, ksi_min_db=-25, n_terms=40):
-        """
-        参数:
-            aa (float): 决策定向平滑因子。
-            ksi_min_db (float): 先验 SNR 下限。
-            n_terms (int): 无穷级数展开的项数，默认为 40。
-        """
+    def __init__(self, n_fft, aa=0.98, n_terms=40, eps=1e-12):
         super().__init__()
+        self.n_fft = n_fft
+        self.fft_bins = n_fft // 2 + 1
+        
         self.aa = aa
-        self.ksi_min = 10**(ksi_min_db / 10)
+        self.ksi_min = 10**(-25/10) # 先验信噪比下限
+        self.ksi_max = 10**(20/10)  # a priori SNR 的上限
         self.n_terms = n_terms
         self.xk_prev = None
+
+        self.eps = eps
 
     def _hyperg_term(self, m, val, c_val):
         """
@@ -49,7 +49,7 @@ class STSAMisSpectralGainEstimator(BaseSpectralGainEstimator):
             poch_c *= (c_val + n - 1)
             fact_n *= n
             z_pow *= val
-            res += (poch_m * poch_m / (poch_c + 1e-12)) * (z_pow / fact_n)
+            res += (poch_m * poch_m / (poch_c + self.eps)) * (z_pow / fact_n)
         return res
 
     def compute_gain(self, frame_psd, noise_psd):
@@ -57,29 +57,32 @@ class STSAMisSpectralGainEstimator(BaseSpectralGainEstimator):
         计算 MIS 谱增益
         """
         sig = np.sqrt(frame_psd)
-        gammak = np.minimum(frame_psd / (noise_psd + 1e-12), 40.0)
+        gammak = np.minimum(frame_psd / (noise_psd + self.eps), 40.0)
         
         # 1. 估计先验 SNR (ksi)
         if self.xk_prev is None:
             ksi = self.aa + (1 - self.aa) * np.maximum(gammak - 1, 0)
         else:
-            ksi = self.aa * (self.xk_prev / (noise_psd + 1e-12)) + \
+            ksi = self.aa * (self.xk_prev / (noise_psd + self.eps)) + \
                   (1 - self.aa) * np.maximum(gammak - 1, 0)
             ksi = np.maximum(self.ksi_min, ksi)
-            
-        vk = (ksi / (1 + ksi + 1e-12)) * gammak
+            ksi = np.minimum(self.ksi_max, ksi)
+
+        log_sigma_k = gammak * ksi / (1 + ksi + self.eps) - np.log(1 + ksi + self.eps)
+        vad_decision = np.sum(log_sigma_k) / self.fft_bins
+
+        vk = (ksi / (1 + ksi + self.eps)) * gammak
         
         # 2. 准备级数计算所需的变量
-        half_len = len(frame_psd) // 2 + 1
-        vk_h = vk[:half_len]
-        sig_h = sig[:half_len]
-        gam_h = gammak[:half_len]
+        vk_h = vk[:self.fft_bins]
+        sig_h = sig[:self.fft_bins]
+        gam_h = gammak[:self.fft_bins]
         
         # arg = Y^2 / (4 * gamma^2)
-        arg = (sig_h**2) / (4 * gam_h**2 + 1e-12)
+        arg = (sig_h**2) / (4 * gam_h**2 + self.eps)
         
-        sum_j1 = np.zeros(half_len)
-        sum_j2 = np.zeros(half_len)
+        sum_j1 = np.zeros(self.fft_bins)
+        sum_j2 = np.zeros(self.fft_bins)
         
         # 3. 计算无穷级数 (Eq. 43)
         for m in range(self.n_terms):
@@ -94,13 +97,13 @@ class STSAMisSpectralGainEstimator(BaseSpectralGainEstimator):
             sum_j1 += (vk_pow_m * d2) / fact_m
             
             # J2 累加 (包含 gamma(m+1.5) / gamma(m+1))
-            g_term = gamma(m + 1.5) / (fact_m + 1e-12)
-            sum_j2 += g_term * vk_pow_m * d2_b / (fact_m + 1e-12)
+            g_term = gamma(m + 1.5) / (fact_m + self.eps)
+            sum_j2 += g_term * vk_pow_m * d2_b / (fact_m + self.eps)
 
         # 4. 组合 J1 和 J2
         ev = np.exp(-vk_h)
         j1 = sum_j1 * ev
-        j2 = sum_j2 * ev * np.sqrt(vk_h) * sig_h / (gam_h + 1e-12)
+        j2 = sum_j2 * ev * np.sqrt(vk_h) * sig_h / (gam_h + self.eps)
         
         # x_hat = exp(J1 + J2) -- 注意：原 MATLAB 代码这里写的是 sig_hat = log(...) 
         # 但在主循环里又把 sig_hat 直接当幅度用了，这里遵循数学逻辑返回幅度估计值
@@ -108,14 +111,14 @@ class STSAMisSpectralGainEstimator(BaseSpectralGainEstimator):
         
         # 对称填充
         x_hat = np.zeros(len(frame_psd))
-        x_hat[:half_len] = x_hat_h
-        x_hat[half_len:] = np.flip(x_hat_h[1 : len(frame_psd) - half_len + 1])
+        x_hat[:self.fft_bins] = x_hat_h
+        x_hat[self.fft_bins:] = np.flip(x_hat_h[1 : len(frame_psd) - self.fft_bins + 1])
         
         # 计算增益
-        gain = x_hat / (sig + 1e-12)
+        gain = x_hat / (sig + self.eps)
         gain = np.clip(gain, 0.0, 1.0)
         
         # 更新状态
         self.xk_prev = (gain**2) * frame_psd
         
-        return gain
+        return gain, vad_decision
