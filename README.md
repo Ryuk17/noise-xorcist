@@ -50,7 +50,7 @@ noise-xorcist is a unified single-channel speech enhancement toolbox, which inco
 - [MultiResolutionSTFTLoss](./deep_learning/losses/mse_loss.py)
 - [SISNRLoss](./deep_learning/losses/snr_loss.py)
 
-## noisyspeech synthesizer
+## Noisyspeech synthesizer
 - [SpecAugment](./noisyspeech_synthesizer/augmentations.py)
 - [MixAugment](./noisyspeech_synthesizer/augmentations.py)
 - [VolAugment](./noisyspeech_synthesizer/augmentations.py)

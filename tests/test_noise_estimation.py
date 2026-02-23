@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-15 17:10:24
 LastEditors: Ryuk
-LastEditTime: 2026-02-22 18:48:50
+LastEditTime: 2026-02-23 16:06:51
 Description: First create
 '''
 
@@ -94,14 +94,14 @@ class TestNoiseEstimator:
 if __name__ == "__main__":
 
     noise_estimator_dict = {
-        "CFRNoiseEstimator": CFRNoiseEstimator,
-        "CSMTNoiseEstimator": CSMTNoiseEstimator,
-        "IMCRANoiseEstimator": IMCRANoiseEstimator,
-        "MCRANoiseEstimator": MCRANoiseEstimator,
-        "MCRA2NoiseEstimator": MCRA2NoiseEstimator,
-        "MSNoiseEstimator": MSNoiseEstimator,
+        # "CFRNoiseEstimator": CFRNoiseEstimator,
+        # "CSMTNoiseEstimator": CSMTNoiseEstimator,
+        # "IMCRANoiseEstimator": IMCRANoiseEstimator,
+        # "MCRANoiseEstimator": MCRANoiseEstimator,
+        # "MCRA2NoiseEstimator": MCRA2NoiseEstimator,
+        # "MSNoiseEstimator": MSNoiseEstimator,
         "SPPNoiseEstimator": SPPNoiseEstimator,
-        "WSANoiseEstimator": WSANoiseEstimator
+        # "WSANoiseEstimator": WSANoiseEstimator
     }
 
     n_fft = 256

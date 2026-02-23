@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-17 15:24:00
 LastEditors: Ryuk
-LastEditTime: 2026-02-17 15:47:22
+LastEditTime: 2026-02-23 17:02:30
 Description: First create
 '''
 
@@ -12,9 +12,9 @@ from ..base import BaseNoiseEstimator
 
 class WSANoiseEstimator(BaseNoiseEstimator):
     """
-    Hirsch, H. and Ehrlicher, C. (1995). Noise estimation techniques for robust 
-	speech recognition. Proc. IEEE Int. Conf. Acoust. , Speech, Signal 
-	Processing, 153-156.
+        Hirsch, H. and Ehrlicher, C. (1995). Noise estimation techniques for robust 
+        speech recognition. Proc. IEEE Int. Conf. Acoust. , Speech, Signal 
+        Processing, 153-156.
     """
 
     def __init__(self, n_fft, alpha_s=0.85, beta=1.5, omin=1.5):
@@ -41,7 +41,7 @@ class WSANoiseEstimator(BaseNoiseEstimator):
             self.P = ns_ps.copy()
             self.noise_ps = ns_ps.copy()
             self._is_initialized = True
-            return self.noise_ps
+            return self.noise_ps.copy()
 
         # 1. 对输入功率谱进行递归平滑
         # P[k] = as * P_old[k] + (1 - as) * ns_ps[k]

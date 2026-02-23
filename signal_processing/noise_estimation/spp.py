@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-17 16:00:39
 LastEditors: Ryuk
-LastEditTime: 2026-02-17 16:03:16
+LastEditTime: 2026-02-23 17:04:30
 Description: First create
 '''
 
@@ -14,10 +14,10 @@ from ..base import BaseNoiseEstimator
 class SPPNoiseEstimator(BaseNoiseEstimator):
 
     """
-    T. Gerkmann and R. C. Hendriks, “Unbiased MMSE-based noise power
-    estimation with low complexity and low tracking delay,” IEEE
-    Transactions on Audio, Speech, and Language Processing, vol. 20, no. 4,
-    pp. 1383–1393, May 2012.
+        T. Gerkmann and R. C. Hendriks, “Unbiased MMSE-based noise power
+        estimation with low complexity and low tracking delay,” IEEE
+        Transactions on Audio, Speech, and Language Processing, vol. 20, no. 4,
+        pp. 1383–1393, May 2012.
     """
 
     def __init__(self, n_fft,
@@ -52,11 +52,11 @@ class SPPNoiseEstimator(BaseNoiseEstimator):
         self._inv_glr_exp_factor = self._snr_opt_lin/(1. + self._snr_opt_lin)
         self._num_frames_processed = 0
 
-    def estimate_noise(self, v_noisy_per, v_spp_in=None):
+    def estimate_noise(self, ns_ps, v_spp_in=None):
         if v_spp_in is None:
             if self._num_frames_processed < self._num_frames_init:
                 # average first frames to obtain first noise PSD estimate
-                v_noise_psd = self._v_old_psd + v_noisy_per / self._num_frames_init
+                v_noise_psd = self._v_old_psd + ns_ps / self._num_frames_init
 
                 self._v_old_psd = v_noise_psd
 
@@ -65,11 +65,11 @@ class SPPNoiseEstimator(BaseNoiseEstimator):
 
                 v_spp = np.zeros_like(self._v_old_psd) # SPP considered 0 at the beginning
 
-                return v_noisy_per, v_spp
+                return ns_ps, v_spp
             else:
                 # compute inverse GLR
                 v_inv_glr = self._inv_glr_factor * \
-                    np.exp(-v_noisy_per / (self._v_old_psd + 1e-8) * self._inv_glr_exp_factor)
+                    np.exp(-ns_ps / (self._v_old_psd + 1e-8) * self._inv_glr_exp_factor)
 
                 # compute SPP (corresponds to line 2 in Algorithm 1, [1])
                 v_spp = 1. / (1. + v_inv_glr)
@@ -83,7 +83,7 @@ class SPPNoiseEstimator(BaseNoiseEstimator):
 
                 # estimate noise periodogram (corresponds to line 5 in Algorithm
                 # 1, [1])
-                v_noise_per = (1. - v_spp) * v_noisy_per + \
+                v_noise_per = (1. - v_spp) * ns_ps + \
                     v_spp * self._v_old_psd
                 # corresponds to line 6 in Algorithm 1, [1]
                 v_noise_psd = (1. - self._fixed_smooth) * v_noise_per + \
@@ -92,12 +92,12 @@ class SPPNoiseEstimator(BaseNoiseEstimator):
             # update old noise PSD estimate
             self._v_old_psd = v_noise_psd
 
-            return v_noise_psd, v_spp
+            return v_noise_psd
         else:
             # estimate noise periodogram (corresponds to line 5 in Algorithm
             # 1, [1])
             #TODO: better use formula of Wang with alpha combined with mask
-            v_noise_per = (1. - v_spp_in) * v_noisy_per + \
+            v_noise_per = (1. - v_spp_in) * ns_ps + \
                 v_spp_in * self._v_old_psd
             # corresponds to line 6 in Algorithm 1, [1]
             v_noise_psd = (1. - self._fixed_smooth) * v_noise_per + \

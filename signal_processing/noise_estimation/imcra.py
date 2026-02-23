@@ -2,23 +2,22 @@
 Author: Ryuk
 Date: 2026-02-17 15:21:11
 LastEditors: Ryuk
-LastEditTime: 2026-02-17 15:39:17
+LastEditTime: 2026-02-23 16:23:42
 Description: First create
 '''
 
 
 import numpy as np
-from scipy.special import exp1 # 对应 MATLAB 的 expint
-
+from scipy.special import exp1
 import numpy as np
 
 from ..base import BaseNoiseEstimator
 
 class IMCRANoiseEstimator(BaseNoiseEstimator):
     """
-    Cohen, I. (2003). Noise spectrum estimation in adverse environments: 
-	Improved minima controlled recursive averaging. IEEE Transactions on Speech 
-	and Audio Processing, 11(5), 466-475.
+        Cohen, I. (2003). Noise spectrum estimation in adverse environments: 
+        Improved minima controlled recursive averaging. IEEE Transactions on Speech 
+        and Audio Processing, 11(5), 466-475.
     """
 
     def __init__(self, n_fft, alpha_d=0.85, alpha_s=0.9, U=8, V=15, 

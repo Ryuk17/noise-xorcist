@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-17 15:03:25
 LastEditors: Ryuk
-LastEditTime: 2026-02-17 15:16:15
+LastEditTime: 2026-02-23 16:33:46
 Description: First create
 '''
 
@@ -16,9 +16,9 @@ from scipy.interpolate import interp1d
 
 class MSNoiseEstimator(BaseNoiseEstimator):
     """
-    Martin, R. (2001). Noise power spectral density estimation based on optimal
-	smoothing and minimum statistics. IEEE Transactions on Speech and Audio 
-	Processing, 9(5), 504-512
+        Martin, R. (2001). Noise power spectral density estimation based on optimal
+        smoothing and minimum statistics. IEEE Transactions on Speech and Audio 
+        Processing, 9(5), 504-512
     """
 
     def __init__(self, n_fft):
