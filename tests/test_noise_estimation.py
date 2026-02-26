@@ -94,14 +94,14 @@ class TestNoiseEstimator:
 if __name__ == "__main__":
 
     noise_estimator_dict = {
-        # "CFRNoiseEstimator": CFRNoiseEstimator,
-        # "CSMTNoiseEstimator": CSMTNoiseEstimator,
-        # "IMCRANoiseEstimator": IMCRANoiseEstimator,
-        # "MCRANoiseEstimator": MCRANoiseEstimator,
-        # "MCRA2NoiseEstimator": MCRA2NoiseEstimator,
-        # "MSNoiseEstimator": MSNoiseEstimator,
+        "CFRNoiseEstimator": CFRNoiseEstimator,
+        "CSMTNoiseEstimator": CSMTNoiseEstimator,
+        "IMCRANoiseEstimator": IMCRANoiseEstimator,
+        "MCRANoiseEstimator": MCRANoiseEstimator,
+        "MCRA2NoiseEstimator": MCRA2NoiseEstimator,
+        "MSNoiseEstimator": MSNoiseEstimator,
         "SPPNoiseEstimator": SPPNoiseEstimator,
-        # "WSANoiseEstimator": WSANoiseEstimator
+        "WSANoiseEstimator": WSANoiseEstimator
     }
 
     n_fft = 256

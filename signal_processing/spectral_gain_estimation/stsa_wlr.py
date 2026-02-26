@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-18 12:55:02
 LastEditors: Ryuk
-LastEditTime: 2026-02-18 13:48:46
+LastEditTime: 2026-02-26 21:09:02
 Description: First create
 '''
 from ..base import BaseSpectralGainEstimator
@@ -18,17 +18,23 @@ class STSAWlrSpectralGainEstimator(BaseSpectralGainEstimator):
         and Audio Processing, 13(5), 857-869.
     """
 
-    def __init__(self, aa=0.98, ksi_min_db=-25):
+    def __init__(self, n_fft, aa=0.98, eps=1e-12):
         """
         参数:
             aa (float): 决策定向 (Decision-Directed) 算法的平滑因子。
             ksi_min_db (float): 先验信噪比的下限 (dB)。
         """
         super().__init__()
+        self.n_fft = n_fft
+        self.fft_bins = n_fft // 2 + 1
+
         self.aa = aa
-        self.ksi_min = 10**(ksi_min_db / 10)
+        self.ksi_min = 10**(-25/10) # 先验信噪比下限
+        self.ksi_max = 10**(20/10)  # a priori SNR 的上限
         self.xk_prev = None
         self.gamma_15 = gamma(1.5)
+
+        self.eps = eps
 
     def _solve_single_bin(self, e_log_x, e_x):
         """
@@ -36,7 +42,7 @@ class STSAWlrSpectralGainEstimator(BaseSpectralGainEstimator):
         """
         # 定义目标函数
         def objective(x):
-            return np.log(x + 1e-12) + e_log_x - (e_x / (x + 1e-12))
+            return np.log(x + self.eps) + e_log_x - (e_x / (x + self.eps))
         
         try:
             # 使用 Brent 寻根法。区间选择：[极小值, 极大值]
@@ -51,27 +57,31 @@ class STSAWlrSpectralGainEstimator(BaseSpectralGainEstimator):
         计算 WLR 谱增益
         """
         sig = np.sqrt(frame_psd)
-        gammak = np.minimum(frame_psd / (noise_psd + 1e-12), 40.0)
+        gammak = np.minimum(frame_psd / (noise_psd + self.eps), 40.0)
         
         # 1. 估计验前信噪比 ksi
         if self.xk_prev is None:
             ksi = self.aa + (1 - self.aa) * np.maximum(gammak - 1, 0)
         else:
-            ksi = self.aa * (self.xk_prev / (noise_psd + 1e-12)) + \
+            ksi = self.aa * (self.xk_prev / (noise_psd + self.eps)) + \
                   (1 - self.aa) * np.maximum(gammak - 1, 0)
-            ksi = np.maximum(self.ksi_min, ksi)
+        ksi = np.maximum(self.ksi_min, ksi)
+        ksi = np.minimum(self.ksi_max, ksi)
             
-        vk = (ksi / (1 + ksi + 1e-12)) * gammak
+        log_sigma_k = gammak * ksi / (1 + ksi + self.eps) - np.log(1 + ksi + self.eps)
+        vad_decision = np.sum(log_sigma_k) / self.fft_bins # 对应 MATLAB 的 len
+
+        vk = (ksi / (1 + ksi + self.eps)) * gammak
         
         # 2. 计算期望值 E[X] 和 E[log X]
         # lk05 对应 MATLAB 代码中的 sqrt(vk)*Yk/gammak
-        lk05 = np.sqrt(vk) * sig / (gammak + 1e-12)
+        lk05 = np.sqrt(vk) * sig / (gammak + self.eps)
         
         # E[x] = gamma(1.5) * lk05 * 1F1(-0.5, 1, -vk)
         ex = self.gamma_15 * lk05 * hyp1f1(-0.5, 1, -vk)
         
         # E[log x] = 1 - 0.5 * (2*log(lk05) + log(vk) + expint(vk))
-        e_log_x = 1.0 - 0.5 * (2.0 * np.log(lk05 + 1e-12) + np.log(vk + 1e-12) + exp1(np.maximum(vk, 1e-10)))
+        e_log_x = 1.0 - 0.5 * (2.0 * np.log(lk05 + self.eps) + np.log(vk + self.eps) + exp1(np.maximum(vk, 1e-10)))
         
         # 3. 对每个频点进行寻根求解 (WLR 核心步骤)
         # 只计算前半部分频谱以加速
@@ -89,10 +99,10 @@ class STSAWlrSpectralGainEstimator(BaseSpectralGainEstimator):
             x_hat[half_len:] = np.flip(x_hat[1:half_len])
 
         # 4. 转换回增益 Gain = 估计幅度 / 带噪幅度
-        gain = x_hat / (sig + 1e-12)
+        gain = x_hat / (sig + self.eps)
         gain = np.clip(gain, 0.0, 1.0)
         
         # 更新状态
         self.xk_prev = (gain**2) * frame_psd
         
-        return gain
+        return gain, vad_decision

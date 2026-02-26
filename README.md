@@ -1,6 +1,13 @@
+<!--
+ * @Author: Ryuk
+ * @Date: 2026-02-19 17:43:08
+ * @LastEditors: Ryuk
+ * @LastEditTime: 2026-02-26 21:47:30
+ * @Description: First create
+-->
 ![noise-xorcist](./assets/icon-224.png)
 # noise-xorcist 
-noise-xorcist is a unified single-channel speech enhancement toolbox, which incorporates a variety of traditional signal processing algorithms and modern deep learning-based methods. Notice: The code is still under development and some parts not yet ready for use.
+noise-xorcist is a unified single-channel speech enhancement toolbox, which incorporates a variety of traditional signal processing algorithms and modern deep learning-based methods.
 
 ## Singal processing
   

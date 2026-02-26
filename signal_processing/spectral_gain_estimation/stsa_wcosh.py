@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-18 12:54:43
 LastEditors: Ryuk
-LastEditTime: 2026-02-18 13:41:19
+LastEditTime: 2026-02-26 20:50:11
 Description: First create
 '''
 from ..base import BaseSpectralGainEstimator
@@ -17,7 +17,7 @@ class STSAWCoshSpectralGainEstimator(BaseSpectralGainEstimator):
         and Audio Processing, 13(5), 857-869.
     """
 
-    def __init__(self, p=-0.5, aa=0.98, ksi_min_db=-25):
+    def __init__(self, n_fft, p=-0.5, aa=0.98, eps=1e-12):
         """
         参数:
             p (float): 幂指数参数，必须大于 -1。常用值如 -0.5。
@@ -25,12 +25,17 @@ class STSAWCoshSpectralGainEstimator(BaseSpectralGainEstimator):
             ksi_min_db (float): 先验信噪比的下限 (dB)，防止增益过小产生音乐噪声。
         """
         super().__init__()
+        self.n_fft = n_fft
+        self.fft_bins = n_fft // 2 + 1
+
         if p <= -1:
-            raise ValueError("参数 p 必须大于 -1")
+            raise ValueError("p must be greater than -1.")
             
         self.p = p
         self.aa = aa
-        self.ksi_min = 10**(ksi_min_db / 10)
+ 
+        self.ksi_min = 10**(-25/10) # 先验信噪比下限
+        self.ksi_max = 10**(20/10)  # a priori SNR 的上限
         
         # 预计算 Gamma 常数项
         # CC2 = sqrt( gamma((p+3)/2) / gamma((p+1)/2) )
@@ -38,6 +43,8 @@ class STSAWCoshSpectralGainEstimator(BaseSpectralGainEstimator):
         
         # 状态变量：保存上一帧增强后的功率谱，用于 DD 估计
         self.xk_prev = None
+
+        self.eps = eps
 
     def compute_gain(self, frame_psd, noise_psd):
         """
@@ -63,7 +70,11 @@ class STSAWCoshSpectralGainEstimator(BaseSpectralGainEstimator):
             ksi = self.aa * (self.xk_prev / (noise_psd + 1e-12)) + \
                   (1 - self.aa) * np.maximum(gammak - 1, 0)
             ksi = np.maximum(self.ksi_min, ksi)
-            
+            ksi = np.minimum(self.ksi_max, ksi)
+        
+        log_sigma_k = gammak * ksi / (1 + ksi + self.eps) - np.log(1 + ksi + self.eps)
+        vad_decision = np.sum(log_sigma_k) / self.fft_bins
+
         # 3. 计算中间变量 vk = (ξ / (1 + ξ)) * γ
         vk = (ksi / (1 + ksi + 1e-12)) * gammak
         
@@ -90,4 +101,4 @@ class STSAWCoshSpectralGainEstimator(BaseSpectralGainEstimator):
         # Xk_prev = G^2 * |Y|^2
         self.xk_prev = (gain**2) * frame_psd
         
-        return gain
+        return gain, vad_decision

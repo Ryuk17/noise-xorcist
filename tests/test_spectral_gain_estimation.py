@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-19 14:17:08
 LastEditors: Ryuk
-LastEditTime: 2026-02-23 22:26:52
+LastEditTime: 2026-02-26 21:48:20
 Description: First create
 '''
 
@@ -99,9 +99,9 @@ if __name__ == "__main__":
         # "LogMMSESpuSpectralEstimator": LogMMSESpuSpectralEstimator,
         # "LogMMSESpectralEstimator": LogMMSESpectralEstimator,
         # "MMSESpectralEstimator": MMSESpectralEstimator,
-        # "OMLSASpectralGainEstimator": OMLSASpectralGainEstimator,
+        "OMLSASpectralGainEstimator": OMLSASpectralGainEstimator,
         # "SSSpectralGainEstimator": SSSpectralGainEstimator,
-        "STSAMisSpectralGainEstimator": STSAMisSpectralGainEstimator,
+        # "STSAMisSpectralGainEstimator": STSAMisSpectralGainEstimator,
         # "STSAWCoshSpectralGainEstimator": STSAWCoshSpectralGainEstimator,
         # "STSAWeuclidSpectralGainEstimator": STSAWeuclidSpectralGainEstimator,
         # "STSAWlrSpectralGainEstimator": STSAWlrSpectralGainEstimator,
