@@ -1,10 +1,10 @@
-# A code template for training DNN-based speech enhancement models.
-A training code template is highly valuable for deep learning engineers as it can significantly enhance their work efficiency. Despite different programmers have varying coding styles, some are excellent while others may not be as good. My philosophy is to prioritize simplicity. In this context, I am sharing a practical organizational structure for training code files in speech enhancement (SE). The primary focus is on keeping it concise and intuitive rather than aiming for comprehensiveness.
-
-## 🔥 News
-- [**2025-3-31**] Added a new branch named `plus` for better implementation. Please use this one directly.
-- [**2024-5-28**] Added a new branch named `pro` for better implementation.
-
+<!--
+ * @Author: Ryuk
+ * @Date: 2026-02-17 14:59:35
+ * @LastEditors: Ryuk
+ * @LastEditTime: 2026-02-26 23:16:51
+ * @Description: First create
+-->
 ## File Specification
 * `configs`: Configuration files for training and infernce.
 * `DNSMOS`: Pre-trained DNSMOS checkpoints from Microsoft.
@@ -15,7 +15,7 @@ A training code template is highly valuable for deep learning engineers as it ca
 * `distributed_utils.py`: Distributed Data Parallel (DDP) training utils.
 * `evaluate.py`: Evaluation script based on scp files obtained by inference.
 * `infer.py`: Inference script.
-* `loss_factory.py`: Various useful loss functions in SE.
+* `losses`: Various useful loss functions in SE.
 * `scheduler.py`: Warmup scheduler definition.
 * `train.py`: Training script, surpporting both multiple-GPU and single-GPU conditions.
 
@@ -43,4 +43,4 @@ When starting a new SE project, you should follow these steps:
 2. Thanks for starring if you find this repo useful.
 
 ## Acknowledgement
-This code template heavily borrows from the excellent [Sheffield_Clarity_CEC1_Entry](https://github.com/TuZehai/Sheffield_Clarity_CEC1_Entry) repository in many aspects.
+This code template heavily borrows from the excellent [SEtrain](https://github.com/Xiaobin-Rong/SEtrain/tree/plus) repository in many aspects.

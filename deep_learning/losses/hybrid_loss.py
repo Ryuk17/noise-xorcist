@@ -1,3 +1,11 @@
+'''
+Author: Ryuk
+Date: 2026-02-17 14:59:35
+LastEditors: Ryuk
+LastEditTime: 2026-02-26 23:21:37
+Description: First create
+'''
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

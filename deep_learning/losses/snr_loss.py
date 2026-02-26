@@ -1,8 +1,11 @@
-# encoding: utf-8
-"""
-@author:  Ryuk
-@contact: jeryuklau@gmail.com
-"""
+'''
+Author: Ryuk
+Date: 2026-02-18 12:45:19
+LastEditors: Ryuk
+LastEditTime: 2026-02-26 23:20:25
+Description: First create
+'''
+
 
 import logging
 

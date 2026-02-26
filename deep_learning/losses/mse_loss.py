@@ -2,7 +2,7 @@
 Author: Ryuk
 Date: 2026-02-18 12:45:19
 LastEditors: Ryuk
-LastEditTime: 2026-02-18 14:11:30
+LastEditTime: 2026-02-26 23:41:42
 Description: First create
 '''
 
@@ -14,28 +14,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .utils import replace_denormals
 
+from .base import BaseSELoss
 
 logger = logging.getLogger(__name__)
 
 
-class WeightedSpeechDistortionLoss(nn.Module):
-    def __init__(self, cfg):
-        super(WeightedSpeechDistortionLoss, self).__init__()
-        self.alpha = cfg["ALPHA"]
+class WeightedSpeechDistortionLoss(BaseSELoss):
+    def __init__(self, weight=1.0, *args, **kwargs):
+        super().__init__(weight=weight)
+        self.alpha = kwargs["alpha"]
 
-    def forward(self, inputs, data):
-        x_lps, x_ms, y_ms, noise_ms, VAD = data["x_lps"], data["x_ms"], data["y_ms"], data["noise_ms"], data["VAD"]
-        y_hat = inputs
+    def forward(self, y_pred, y_true, *args, **kwargs):
+        VAD, noise_ms = kwargs["VAD"], kwargs["noise_ms"]
+        VAD_expanded = torch.unsqueeze(VAD, dim=1).expand_as(y_true)
+        loss_speech = F.mse_loss(y_true[VAD_expanded], (y_pred * y_true)[VAD_expanded])
+        loss_noise = F.mse_loss(torch.zeros_like(y_pred), y_pred * noise_ms)
 
-        VAD_expanded = torch.unsqueeze(VAD, dim=1).expand_as(y_ms)
-        loss_speech = F.mse_loss(y_ms[VAD_expanded], (y_hat * y_ms)[VAD_expanded])
-        loss_noise = F.mse_loss(torch.zeros_like(y_hat), y_hat * noise_ms)
-
-        loss_val = self.alpha * loss_speech + (1 - self.alpha) * loss_noise
-        return loss_val
+        loss = self.alpha * loss_speech + (1 - self.alpha) * loss_noise
+        return loss
 
 
-class ComplexCompressedMSELoss(nn.Module):
+class ComplexCompressedMSELoss(BaseSELoss):
     """ Complex Compressed Mean Square Error Loss implemented as shown in
     section two of:
         https://arxiv.org/pdf/2101.09249.pdf
@@ -45,14 +44,13 @@ class ComplexCompressedMSELoss(nn.Module):
     eps (float): Machine epsilon.
     """
 
-    def __init__(self, cfg):
-        super().__init__()
-        self.c_ = cfg["c"]
-        self.lambda_ = cfg["lambda"]
-        self.eps = cfg["eps"]
+    def __init__(self, weight=1.0, *args, **kwargs):
+        super().__init__(weight=weight)
+        self.c_ = kwargs["c"]
+        self.lambda_ = kwargs["lambda"]
+        self.eps = kwargs["eps"]
 
-    def forward(self, y_pred_mask: torch.tensor, x_complex: torch.tensor,
-                y_complex: torch.tensor):
+    def forward(self, y_pred_mask, x_complex, y_complex, *args, **kwargs):
         # clean denormals
         y_complex = replace_denormals(torch.real(y_complex)) + \
                     1j * torch.imag(y_complex)
@@ -96,9 +94,9 @@ class ComplexCompressedMSELoss(nn.Module):
         return torch.mean(loss)
 
 
-class STFTLoss(nn.Module):
-    def __init__(self, n_fft=1024, hop_len=120, win_len=600, window="hann_window"):
-        super().__init__()
+class STFTLoss(BaseSELoss):
+    def __init__(self, weight=1.0, n_fft=1024, hop_len=120, win_len=600, window="hann_window", *args, **kwargs):
+        super().__init__(weight)
         self.n_fft = n_fft
         self.hop_len = hop_len
         self.win_len = win_len
@@ -110,7 +108,7 @@ class STFTLoss(nn.Module):
     def loss_log_magnitude(self, x_mag, y_mag):
         return torch.nn.functional.l1_loss(torch.log(y_mag), torch.log(x_mag))
 
-    def forward(self, x, y):
+    def forward(self, x, y, *args, **kwargs):
         """x, y: (B, T), in time domain"""
         x = torch.stft(x, self.n_fft, self.hop_len, self.win_len, self.window.to(x.device), return_complex=True)
         y = torch.stft(y, self.n_fft, self.hop_len, self.win_len, self.window.to(x.device), return_complex=True)
@@ -124,7 +122,7 @@ class STFTLoss(nn.Module):
         return loss
 
 
-class MultiResolutionSTFTLoss(nn.Module):
+class MultiResolutionSTFTLoss(BaseSELoss):
     def __init__(
         self,
         fft_sizes=[2048, 1024, 512],
