@@ -52,20 +52,16 @@ noise-xorcist is a unified single-channel speech enhancement toolbox, which inco
 ## Metric
 
 ### intrusive (with reference)
-| Metric | Description | Range |
-|--------|-------------|-------|
-| [SDR](./evaluation/calculate_intrusive_se_metrics.py) | Signal-to-Distortion Ratio | dB, higher is better |
-| [SISNR](./evaluation/calculate_intrusive_se_metrics.py) | Scale-Invariant Signal-to-Noise Ratio | dB, higher is better |
-| [PESQ](./evaluation/calculate_intrusive_se_metrics.py) | Perceptual Evaluation of Speech Quality | -0.5 ~ 4.5 (NB) / (WB), higher is better |
-| [ESTOI](./evaluation/calculate_intrusive_se_metrics.py) | Extended Short-Time Objective Intelligibility | 0 ~ 1, higher is better |
+- [SDR](./evaluation/calculate_intrusive_se_metrics.py)
+- [SISNR](./evaluation/calculate_intrusive_se_metrics.py)
+- [PESQ](./evaluation/calculate_intrusive_se_metrics.py)
+- [ESTOI](./evaluation/calculate_intrusive_se_metrics.py)
 
 ### non-intrusive (without reference)
-| Metric | Description | Range |
-|--------|-------------|-------|
-| [OVRL](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS Overall Quality | 1 ~ 5, higher is better |
-| [SIG](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS Signal Quality | 1 ~ 5, higher is better |
-| [BAK](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS Background Quality | 1 ~ 5, higher is better |
-| [P808_MOS](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS P.808 MOS Prediction | 1 ~ 5, higher is better |
+- [OVRL](./evaluation/calculate_nonintrusive_dnsmos.py)
+- [SIG](./evaluation/calculate_nonintrusive_dnsmos.py)
+- [BAK](./evaluation/calculate_nonintrusive_dnsmos.py)
+- [P808_MOS](./evaluation/calculate_nonintrusive_dnsmos.py)
 
 ## Noisyspeech synthesizer
 - [SpecAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
