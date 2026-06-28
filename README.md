@@ -1,32 +1,30 @@
 ![noise-xorcist](./assets/icon-224.png)
-# noise-xorcist 
+# noise-xorcist
 noise-xorcist is a unified single-channel speech enhancement toolbox, which incorporates a variety of traditional signal processing algorithms and modern deep learning-based methods.
 
-## Singal processing
-  
-### noise estimitation  
-- [Minimum statistics](./signal_processing/noise_estimation/ms.py) 
-- [MCRA](./signal_processing/noise_estimation/mcra.py) 
-- [MCRA2](./signal_processing/noise_estimation/mcra2.py) 
-- [IMCRA](./signal_processing/noise_estimation/imcra.py) 
-- [Continuous minimal tracking](./signal_processing/noise_estimation/csmt.py) 
-- [Weighted spectral average](./signal_processing/noise_estimation/wsa.py) 
-- [Connected time-frequency regions](./signal_processing/noise_estimation/cfr.py) 
-- [SPP](./signal_processing/noise_estimation/spp.py) 
+## Signal processing
 
+### noise estimation
+- [Minimum statistics](./signal_processing/noise_estimation/ms.py)
+- [MCRA](./signal_processing/noise_estimation/mcra.py)
+- [MCRA2](./signal_processing/noise_estimation/mcra2.py)
+- [IMCRA](./signal_processing/noise_estimation/imcra.py)
+- [Continuous minimal tracking](./signal_processing/noise_estimation/csmt.py)
+- [Weighted spectral average](./signal_processing/noise_estimation/wsa.py)
+- [Connected time-frequency regions](./signal_processing/noise_estimation/cfr.py)
+- [SPP](./signal_processing/noise_estimation/spp.py)
 
 ### spectral gain estimation
-- [Spectral substractive](./signal_processing/spectral_gain_estimation/spectral_subtraction.py)
+- [Spectral subtraction](./signal_processing/spectral_gain_estimation/spectral_subtraction.py)
 - [MMSE](./signal_processing/spectral_gain_estimation/mmse.py)
 - [LogMMSE](./signal_processing/spectral_gain_estimation/logmmse.py)
 - [LogMMSE SPU](./signal_processing/spectral_gain_estimation/logmmse_spu.py)
-- [STSA Mis](./signal_processing/spectral_gain_estimation/stat_mis.py)
-- [STSA Wcosh](./signal_processing/spectral_gain_estimation/stat_wcosh.py)
-- [STSA Weuclid](./signal_processing/spectral_gain_estimation/stat_weuclid.py)
-- [STSA Wlr](./signal_processing/spectral_gain_estimation/stat_wlr.py)
+- [STSA Mis](./signal_processing/spectral_gain_estimation/stsa_mis.py)
+- [STSA Wcosh](./signal_processing/spectral_gain_estimation/stsa_wcosh.py)
+- [STSA Weuclid](./signal_processing/spectral_gain_estimation/stsa_weuclid.py)
+- [STSA Wlr](./signal_processing/spectral_gain_estimation/stsa_wlr.py)
 - [Wiener](./signal_processing/spectral_gain_estimation/wiener.py)
-- [Omlsa](./signal_processing/spectral_gain_estimation/omlsa.py)
-
+- [OMLSA](./signal_processing/spectral_gain_estimation/omlsa.py)
 
 ## Deep learning
 
@@ -37,23 +35,42 @@ noise-xorcist is a unified single-channel speech enhancement toolbox, which inco
 - [GCRN](./deep_learning/models/gcrn.py)
 - [GCCRN](./deep_learning/models/gccrn.py)
 - [GTCRN](./deep_learning/models/gtcrn.py)
-- [DeepfilterNet](./deep_learning/models/deepfilternet.py)
-- [DeepfilterNet2](./deep_learning/models/deepfilternet2.py)
-- [DeepfilterNet3](./deep_learning/models/deepfilternet3.py)
+- [DeepFilterNet](./deep_learning/models/deepfilternet/deepfilternet.py)
+- [DeepFilterNet2](./deep_learning/models/deepfilternet/deepfilternet2.py)
+- [DeepFilterNet3](./deep_learning/models/deepfilternet/deepfilternet3.py)
 
 ### loss
+- [HybridLoss](./deep_learning/losses/hybrid_loss.py) (STFT magnitude + complex + SISNR)
 - [WeightedSpeechDistortionLoss](./deep_learning/losses/mse_loss.py)
 - [ComplexCompressedMSELoss](./deep_learning/losses/mse_loss.py)
-- [NegativeSNRLoss](./deep_learning/losses/snr_loss.py)
-- [GainMaskBasedNegativeSNRLoss](./deep_learning/losses/snr_loss.py)
 - [STFTLoss](./deep_learning/losses/mse_loss.py)
 - [MultiResolutionSTFTLoss](./deep_learning/losses/mse_loss.py)
+- [NegativeSNRLoss](./deep_learning/losses/snr_loss.py)
+- [GainMaskBasedNegativeSNRLoss](./deep_learning/losses/snr_loss.py)
 - [SISNRLoss](./deep_learning/losses/snr_loss.py)
 
+## Metric
+
+### intrusive (with reference)
+| Metric | Description | Range |
+|--------|-------------|-------|
+| [SDR](./evaluation/calculate_intrusive_se_metrics.py) | Signal-to-Distortion Ratio | dB, higher is better |
+| [SISNR](./evaluation/calculate_intrusive_se_metrics.py) | Scale-Invariant Signal-to-Noise Ratio | dB, higher is better |
+| [PESQ](./evaluation/calculate_intrusive_se_metrics.py) | Perceptual Evaluation of Speech Quality | -0.5 ~ 4.5 (NB) / (WB), higher is better |
+| [ESTOI](./evaluation/calculate_intrusive_se_metrics.py) | Extended Short-Time Objective Intelligibility | 0 ~ 1, higher is better |
+
+### non-intrusive (without reference)
+| Metric | Description | Range |
+|--------|-------------|-------|
+| [OVRL](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS Overall Quality | 1 ~ 5, higher is better |
+| [SIG](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS Signal Quality | 1 ~ 5, higher is better |
+| [BAK](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS Background Quality | 1 ~ 5, higher is better |
+| [P808_MOS](./evaluation/calculate_nonintrusive_dnsmos.py) | DNSMOS P.808 MOS Prediction | 1 ~ 5, higher is better |
+
 ## Noisyspeech synthesizer
-- [SpecAugment](./noisyspeech_synthesizer/augmentations.py)
-- [MixAugment](./noisyspeech_synthesizer/augmentations.py)
-- [VolAugment](./noisyspeech_synthesizer/augmentations.py)
-- [ClipAugment](./noisyspeech_synthesizer/augmentations.py)
-- [BreakAugment](./noisyspeech_synthesizer/augmentations.py)
-- [HowlingAugment](./noisyspeech_synthesizer/augmentations.py)
+- [SpecAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
+- [MixAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
+- [VolAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
+- [ClipAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
+- [BreakAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
+- [HowlingAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)

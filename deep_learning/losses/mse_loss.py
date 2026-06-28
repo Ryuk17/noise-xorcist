@@ -134,7 +134,7 @@ class MultiResolutionSTFTLoss(BaseSELoss):
         assert len(fft_sizes) == len(hop_sizes) == len(win_lengths)
         self.stft_losses = nn.ModuleList()
         for fs, hs, wl in zip(fft_sizes, hop_sizes, win_lengths):
-            self.stft_losses += [STFTLoss(fs, hs, wl, window)]
+            self.stft_losses += [STFTLoss(n_fft=fs, hop_len=hs, win_len=wl, window=window)]
 
     def forward(self, x, y):
         loss = 0.0

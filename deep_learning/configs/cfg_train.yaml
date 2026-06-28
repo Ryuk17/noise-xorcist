@@ -1,21 +1,23 @@
-network_config:
-  n_fft: 512
-  hop_len: 256
-  win_len: 512
+model:
+  name: gtcrn
+  params:
+    n_fft: 512
+    hop_len: 256
+    win_len: 512
 
 DDP:
-  world_size: 2
+  world_size: 1
 
 optimizer:
   lr: 0.001
 
 scheduler:
-  kwargs:
+  name: warmup_cosine
+  params:
     warmup_steps: 25000
     decay_until_step: 250000
     max_lr: 1e-3
     min_lr: 1e-6
-
   update_interval: step  # [step, epoch]
 
 FFT:
@@ -24,31 +26,37 @@ FFT:
   win_length: 512
 
 loss:
-  n_fft: ${FFT.n_fft}
-  hop_len: ${FFT.hop_length}
-  win_len: ${FFT.win_length}
-  compress_factor: 0.3
-  eps: 1e-12
-  lamda_ri: 30
-  lamda_mag: 70
+  name: hybrid
+  params:
+    n_fft: ${FFT.n_fft}
+    hop_len: ${FFT.hop_length}
+    win_len: ${FFT.win_length}
+    compress_factor: 0.3
+    eps: 1e-12
+    lamda_ri: 30
+    lamda_mag: 70
 
-train_dataset: 
-  length_in_seconds: 10
-  num_data_tot: 72000  # 200 h
-  num_data_per_epoch: 10000
-  random_start_point: False
-  train: True
+train_dataset:
+  name: dns3
+  params:
+    length_in_seconds: 10
+    num_data_tot: 72000  # 200 h
+    num_data_per_epoch: 10000
+    random_start_point: False
+    train: True
 
-train_dataloader: 
+train_dataloader:
   batch_size: 8
   num_workers: 4
   drop_last: True
   pin_memory: True
 
-validation_dataset: 
-  length_in_seconds: 10
-  random_start_point: False
-  train: False
+validation_dataset:
+  name: dns3
+  params:
+    length_in_seconds: 10
+    random_start_point: False
+    train: False
 
 validation_dataloader:
   batch_size: 4

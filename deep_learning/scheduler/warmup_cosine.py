@@ -1,29 +1,11 @@
-# Copyright (c) NXAI GmbH and its affiliates 2024
-# Author: Maximilian Beck
-# Licensed under the Apache License, Version 2.0
-# Adapted from xlstm/experiments/lr_scheduler.py
-# Source: https://github.com/NX-AI/xlstm
-
+"""
+Linear Warmup + Cosine Annealing 学习率调度器。
+"""
 import math
-from abc import abstractmethod
-from torch.optim import lr_scheduler
+
+from .base import BaseLRScheduler
 
 
-class BaseLRScheduler(lr_scheduler._LRScheduler):
-    def __init__(self, optimizer, last_epoch=-1):
-        super().__init__(optimizer, last_epoch)
-
-    @abstractmethod
-    def get_lr(self):
-        """Returns the current learning rate for each parameter group."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def reinitialize(self, **kwargs) -> None:
-        """Reinitializes the learning rate scheduler."""
-        raise NotImplementedError
-    
-    
 class LinearWarmupCosineAnnealingLR(BaseLRScheduler):
     def __init__(self, optimizer, warmup_steps, decay_until_step, max_lr, min_lr, last_epoch=-1):
         self.optimizer = optimizer
@@ -48,7 +30,6 @@ class LinearWarmupCosineAnnealingLR(BaseLRScheduler):
             return min_lr
 
     def get_lr(self):
-        """Returns the current learning rate for each parameter group."""
         step = self.last_epoch
         return (
             self.compute_lr(step, self.warmup_steps, self.decay_until_step, self.max_lr, self.min_lr)

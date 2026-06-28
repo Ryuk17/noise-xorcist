@@ -14,12 +14,12 @@ from joblib import Parallel, delayed
 import soundfile as sf
 import torch.distributed as dist
 from torch.utils.tensorboard import SummaryWriter
-from distributed_utils import reduce_value
+from utils.distributed_utils import reduce_value
 
-from models.gtcrn_end2end import GTCRN as Model
-from loss_factory import HybridLoss as Loss
-from dataloader_dns3 import DNS3Dataset as Dataset
-from scheduler import LinearWarmupCosineAnnealingLR as WarmupLR
+from models import build_model
+from losses import build_loss
+from datasets import build_dataset
+from scheduler import build_scheduler
 
 seed = 43
 random.seed(seed)
@@ -42,38 +42,34 @@ def run(rank, config, args):
     args.rank = rank
     args.device = torch.device(rank)
     
-    collate_fn = Dataset.collate_fn if hasattr(Dataset, "collate_fn") else None
-    # config['train_dataloader']['batch_size'] = config['train_dataloader']['batch_size'] // args.world_size
+    collate_fn = None
     shuffle = False if args.world_size > 1 else True
 
-    train_dataset = Dataset(**config['train_dataset'])
+    train_dataset = build_dataset(config['train_dataset']['name'], config['train_dataset']['params'])
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.world_size > 1 else None
     train_dataloader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                     sampler=train_sampler,
                                                     **config['train_dataloader'],
                                                     shuffle=shuffle,
                                                     collate_fn=collate_fn)
-    
-    validation_dataset = Dataset(**config['validation_dataset'])
+
+    validation_dataset = build_dataset(config['validation_dataset']['name'], config['validation_dataset']['params'])
     validation_sampler = torch.utils.data.distributed.DistributedSampler(validation_dataset) if args.world_size > 1 else None
     validation_dataloader = torch.utils.data.DataLoader(dataset=validation_dataset,
                                                         sampler=validation_sampler,
-                                                        **config['validation_dataloader'], 
+                                                        **config['validation_dataloader'],
                                                         shuffle=False,
                                                         collate_fn=collate_fn)
-        
-    model = Model(**config['network_config']).to(args.device)
+
+    model = build_model(config['model']['name'], config['model']['params']).to(args.device)
 
     if args.world_size > 1:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank])
 
     optimizer = torch.optim.Adam(params=model.parameters(), **config['optimizer'])
-    # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, **config['scheduler']['kwargs'])
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, **config['scheduler']['kwargs'])
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, **config['scheduler']['kwargs'])
-    scheduler = WarmupLR(optimizer, **config['scheduler']['kwargs'])
+    scheduler = build_scheduler(config['scheduler']['name'], optimizer, config['scheduler']['params'])
     
-    loss_func = Loss(**config['loss']).to(args.device)
+    loss_func = build_loss(config['loss']['name'], config['loss']['params']).to(args.device)
 
     trainer = Trainer(config=config, model=model,optimizer=optimizer, scheduler=scheduler, loss_func=loss_func,
                       train_dataloader=train_dataloader, validation_dataloader=validation_dataloader, 
@@ -197,7 +193,7 @@ class Trainer:
             self.train_bar.desc = '   train[{}/{}][{}]'.format(
                 epoch, self.epochs + self.start_epoch-1, datetime.now().strftime("%Y-%m-%d-%H:%M"))
 
-            self.train_bar.postfix = 'train_loss={:.3f}'.format(total_loss / step)
+            self.train_bar.set_postfix_str('train_loss={:.3f}'.format(total_loss / step))
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -255,8 +251,8 @@ class Trainer:
             self.validation_bar.desc = 'validate[{}/{}][{}]'.format(
                 epoch, self.epochs + self.start_epoch-1, datetime.now().strftime("%Y-%m-%d-%H:%M"))
 
-            self.validation_bar.postfix = 'valid_loss={:.3f}, pesq={:.4f}'.format(
-                total_loss / step, total_pesq_score / step)
+            self.validation_bar.set_postfix_str('valid_loss={:.3f}, pesq={:.4f}'.format(
+                total_loss / step, total_pesq_score / step))
 
         if (self.world_size > 1) and (self.device != torch.device("cpu")):
             torch.cuda.synchronize(self.device)

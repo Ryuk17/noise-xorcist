@@ -4,7 +4,7 @@ import torch
 import soundfile as sf
 from tqdm import tqdm
 from omegaconf import OmegaConf
-from models.gtcrn_end2end import GTCRN as Model
+from models import build_model
 
 def main(args):
     cfg_infer = OmegaConf.load(args.config)
@@ -17,7 +17,7 @@ def main(args):
     
     device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
 
-    model = Model(**cfg_network['network_config']).to(device)
+    model = build_model(cfg_network['model']['name'], cfg_network['model']['params']).to(device)
     checkpoint = torch.load(cfg_infer.network.checkpoint, map_location=device)
     model.load_state_dict(checkpoint['model'])
     model.eval()

@@ -225,7 +225,7 @@ class DPGRNN(nn.Module):
         return dual_out
 
 
-class Encoder(nn.Module):
+class GtcrnEncoder(nn.Module):
     def __init__(self):
         super().__init__()
         self.en_convs = nn.ModuleList([
@@ -244,7 +244,7 @@ class Encoder(nn.Module):
         return x, en_outs
 
 
-class Decoder(nn.Module):
+class GtcrnDecoder(nn.Module):
     def __init__(self):
         super().__init__()
         self.de_convs = nn.ModuleList([
@@ -263,15 +263,10 @@ class Decoder(nn.Module):
     
 
 class Mask(nn.Module):
-    """Complex Ratio Mask"""
-    def __init__(self):
-        super().__init__()
-
+    """Complex Ratio Mask — 使用 common.layers 中的实现"""
     def forward(self, mask, spec):
-        s_real = spec[:,0] * mask[:,0] - spec[:,1] * mask[:,1]
-        s_imag = spec[:,1] * mask[:,0] + spec[:,0] * mask[:,1]
-        s = torch.stack([s_real, s_imag], dim=1)  # (B,2,T,F)
-        return s
+        from .common.layers import complex_ratio_mask
+        return complex_ratio_mask(mask, spec)
 
 
 class GTCRN(nn.Module):
@@ -289,12 +284,12 @@ class GTCRN(nn.Module):
         self.erb = ERB(65, 64)
         self.sfe = SFE(3, 1)
 
-        self.encoder = Encoder()
-        
+        self.encoder = GtcrnEncoder()
+
         self.dpgrnn1 = DPGRNN(16, 33, 16)
         self.dpgrnn2 = DPGRNN(16, 33, 16)
-        
-        self.decoder = Decoder()
+
+        self.decoder = GtcrnDecoder()
 
         self.mask = Mask()
 
