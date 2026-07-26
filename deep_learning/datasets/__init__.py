@@ -3,10 +3,12 @@
 """
 
 from .dns3_dataset import DNS3Dataset
+from .voicebank_dataset import VoiceBankDataset
 
 
 DATASET_REGISTRY = {
     "dns3": DNS3Dataset,
+    "voicebank": VoiceBankDataset,
 }
 
 

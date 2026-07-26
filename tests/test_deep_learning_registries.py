@@ -87,7 +87,7 @@ class TestLossRegistry:
 class TestDatasetRegistry:
     def test_all_names_exist(self):
         from datasets import DATASET_REGISTRY
-        assert set(DATASET_REGISTRY.keys()) == {"dns3"}
+        assert set(DATASET_REGISTRY.keys()) == {"dns3", "voicebank"}
 
     def test_dns3_class(self):
         from datasets import DATASET_REGISTRY, DNS3Dataset

@@ -6,44 +6,44 @@
  * @Description: Deep learning speech enhancement training framework.
 -->
 
-## 目录结构
+## Directory Structure
 
-| 目录 | 说明 |
-|------|------|
-| `configs/` | YAML 配置文件（训练 / 推理） |
-| `models/` | 模型定义，通过注册表按名称实例化 |
-| `models/common/` | 因果编解码器等通用复用组件 |
-| `models/deepfilternet/` | DeepFilterNet 系列模型 |
-| `losses/` | 损失函数，通过注册表按名称实例化 |
-| `datasets/` | 数据集，通过注册表按名称实例化 |
-| `scheduler/` | 学习率调度器，通过注册表按名称实例化 |
-| `utils/` | DDP 分布式训练等工具 |
+| Directory | Description |
+|-----------|-------------|
+| `configs/` | YAML config files (training / inference) |
+| `models/` | Model definitions, instantiated by name via registry |
+| `models/common/` | Reusable components such as causal encoder/decoder |
+| `models/deepfilternet/` | DeepFilterNet model family |
+| `losses/` | Loss functions, instantiated by name via registry |
+| `datasets/` | Datasets, instantiated by name via registry |
+| `scheduler/` | Learning rate schedulers, instantiated by name via registry |
+| `utils/` | DDP distributed training utilities |
 
-顶层脚本：`train.py`（训练）、`infer.py`（推理）、`evaluate.py`（评估）、`dataloader.py`（DataLoader 测试）。
+Top-level scripts: `train.py` (training), `infer.py` (inference), `evaluate.py` (evaluation), `dataloader.py` (DataLoader smoke test).
 
-## 配置驱动设计
+## Config-Driven Design
 
-模型、损失函数、数据集、调度器均通过 `configs/cfg_train.yaml` 配置，无需修改 `train.py` 代码。
+Models, loss functions, datasets, and schedulers are all configured through `configs/cfg_train.yaml` — no changes to `train.py` are needed.
 
-### cfg_train.yaml 关键配置
+### Key cfg_train.yaml Sections
 
 ```yaml
 model:
-  name: gtcrn               # 模型名称，对应 MODEL_REGISTRY
-  params:                   # 模型构造参数
+  name: gtcrn               # model name, maps to MODEL_REGISTRY
+  params:                   # model constructor arguments
     n_fft: 512
     hop_len: 256
     win_len: 512
 
 loss:
-  name: hybrid              # 损失函数名称，对应 LOSS_REGISTRY
-  params:                   # 损失函数构造参数
+  name: hybrid              # loss name, maps to LOSS_REGISTRY
+  params:                   # loss constructor arguments
     n_fft: 512
     ...
 
 train_dataset:
-  name: dns3                # 数据集名称，对应 DATASET_REGISTRY
-  params:                   # 数据集构造参数
+  name: dns3                # dataset name, maps to DATASET_REGISTRY
+  params:                   # dataset constructor arguments
     length_in_seconds: 10
     ...
 
@@ -52,65 +52,65 @@ validation_dataset:
   params: ...
 
 scheduler:
-  name: warmup_cosine       # 调度器名称，对应 SCHEDULER_REGISTRY
-  params:                   # 调度器构造参数
+  name: warmup_cosine       # scheduler name, maps to SCHEDULER_REGISTRY
+  params:                   # scheduler constructor arguments
     warmup_steps: 25000
     ...
-  update_interval: step     # step 或 epoch
+  update_interval: step     # "step" or "epoch"
 ```
 
-### 可用组件
+### Available Components
 
-| 组件 | 注册表 | 可用名称 |
-|------|--------|----------|
-| 模型 | `MODEL_REGISTRY` | `gtcrn`, `crn`, `gcrn`, `gccrn`, `dpcrn`, `nsnet`, `df1`, `df2`, `df3` |
-| 损失函数 | `LOSS_REGISTRY` | `hybrid`, `stft`, `multi_stft`, `compressed_mse`, `weighted_sd`, `neg_snr`, `gain_neg_snr`, `sisnr` |
-| 数据集 | `DATASET_REGISTRY` | `dns3` |
-| 调度器 | `SCHEDULER_REGISTRY` | `warmup_cosine`, `step`, `multistep`, `cosine`, `plateau` |
+| Component | Registry | Available Names |
+|-----------|----------|-----------------|
+| Model | `MODEL_REGISTRY` | `gtcrn`, `crn`, `gcrn`, `gccrn`, `dpcrn`, `nsnet`, `df1`, `df2`, `df3` |
+| Loss | `LOSS_REGISTRY` | `hybrid`, `stft`, `multi_stft`, `compressed_mse`, `weighted_sd`, `neg_snr`, `gain_neg_snr`, `sisnr` |
+| Dataset | `DATASET_REGISTRY` | `dns3`, `voicebank` |
+| Scheduler | `SCHEDULER_REGISTRY` | `warmup_cosine`, `step`, `multistep`, `cosine`, `plateau` |
 
-## 使用流程
+## Usage
 
-1. **准备数据集**：在 `datasets/` 中创建数据集类，并在 `datasets/__init__.py` 注册
-2. **定义模型**：在 `models/` 中创建模型文件，并在 `models/__init__.py` 注册
-3. **选择/创建损失函数**：在 `losses/` 中定义，并在 `losses/__init__.py` 注册
-4. **配置训练**：修改 `configs/cfg_train.yaml` 中的 name + params
-5. **运行训练**：
+1. **Prepare dataset**: Create a dataset class in `datasets/` and register it in `datasets/__init__.py`
+2. **Define model**: Create a model file in `models/` and register it in `models/__init__.py`
+3. **Select/create loss**: Define it in `losses/` and register it in `losses/__init__.py`
+4. **Configure training**: Set name + params in `configs/cfg_train.yaml`
+5. **Run training**:
    ```bash
-   python train.py                              # 单卡
-   python train.py -D 1                         # 指定 GPU
-   python train.py -C configs/cfg_train.yaml -D 0,1,2,3  # 多卡 DDP
+   python train.py                              # single GPU
+   python train.py -D 1                         # specific GPU
+   python train.py -C configs/cfg_train.yaml -D 0,1,2,3  # multi-GPU DDP
    ```
-6. **推理**：在 `configs/cfg_infer.yaml` 中指定 checkpoint 路径，运行 `python infer.py`
-7. **评估**：运行 `python evaluate.py`
+6. **Inference**: Specify the checkpoint path in `configs/cfg_infer.yaml`, then run `python infer.py`
+7. **Evaluation**: Run `python evaluate.py`
 
-## 添加新组件
+## Adding a New Component
 
-只需两步，无需修改 train.py：
+Only two steps, no changes to `train.py`:
 
-1. 创建实现文件
-2. 在对应的 `__init__.py` 注册表中添加一行
+1. Create the implementation file
+2. Add one line to the corresponding `__init__.py` registry
 
-例如添加新数据集：
+Example for adding a new dataset:
 ```python
-# datasets/my_dataset.py — 实现 MyDataset 类
+# datasets/my_dataset.py — implement MyDataset class
 # datasets/__init__.py
 from .my_dataset import MyDataset
 DATASET_REGISTRY["my_dataset"] = MyDataset
 ```
 
-然后在 `cfg_train.yaml` 中：
+Then in `cfg_train.yaml`:
 ```yaml
 train_dataset:
   name: my_dataset
   params: ...
 ```
 
-## 注意事项
+## Notes
 
-1. 代码面向 Linux 系统，Windows 可能遇到路径兼容和 pesq 安装问题
-2. DeepFilterNet 系列模型 (`df1`/`df2`/`df3`) 需要额外安装 `libdf` 和 `df` 包，参考 [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet)
-3. 如对本项目有帮助，欢迎 star
+1. This code targets Linux. Windows may encounter path compatibility and `pesq` installation issues.
+2. DeepFilterNet models (`df1`/`df2`/`df3`) require separate installation of `libdf` and `df` packages — see [DeepFilterNet](https://github.com/Rikorose/DeepFilterNet).
+3. If you find this project useful, a star is appreciated.
 
-## 致谢
+## Acknowledgements
 
-本代码模板大量参考了优秀的 [SEtrain](https://github.com/Xiaobin-Rong/SEtrain/tree/plus) 仓库。
+This code template draws heavily from the excellent [SEtrain](https://github.com/Xiaobin-Rong/SEtrain/tree/plus) repository.

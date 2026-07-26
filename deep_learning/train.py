@@ -3,6 +3,7 @@ import torch
 import random
 import shutil
 import argparse
+import warnings
 import numpy as np
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,15 @@ from tqdm import tqdm
 from glob import glob
 from pesq import pesq
 from joblib import Parallel, delayed
+
+# Try both possible import paths for NoUtterancesError
+try:
+    from pesq import NoUtterancesError
+except ImportError:
+    try:
+        from cypesq import NoUtterancesError
+    except ImportError:
+        NoUtterancesError = Exception
 import soundfile as sf
 import torch.distributed as dist
 from torch.utils.tensorboard import SummaryWriter
@@ -21,26 +31,41 @@ from losses import build_loss
 from datasets import build_dataset
 from scheduler import build_scheduler
 
+# Suppress joblib loky semaphore leak warning at shutdown
+warnings.filterwarnings('ignore', message='.*leaked semlock objects.*', category=UserWarning)
+
 seed = 43
 random.seed(seed)
 os.environ['PYTHONHASHSEED'] = str(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 # torch.backends.cudnn.deterministic = True
+
+
+def _safe_pesq(fs, ref, deg, mode):
+    """Wrapper around pesq() that catches NoUtterancesError and returns NaN."""
+    try:
+        return pesq(fs, ref, deg, mode)
+    except NoUtterancesError:
+        return float('nan')
 
 
 def run(rank, config, args):
     if args.world_size > 1:
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '12354'
-        dist.init_process_group("nccl", rank=rank, world_size=args.world_size)
-        torch.cuda.set_device(rank)
+        if args.use_cpu:
+            dist.init_process_group("gloo", rank=rank, world_size=args.world_size)
+        else:
+            dist.init_process_group("nccl", rank=rank, world_size=args.world_size)
+            torch.cuda.set_device(rank)
         dist.barrier()
 
     args.rank = rank
-    args.device = torch.device(rank)
+    args.device = torch.device('cpu') if args.use_cpu else torch.device(rank)
     
     collate_fn = None
     shuffle = False if args.world_size > 1 else True
@@ -64,7 +89,10 @@ def run(rank, config, args):
     model = build_model(config['model']['name'], config['model']['params']).to(args.device)
 
     if args.world_size > 1:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank])
+        if args.use_cpu:
+            model = torch.nn.parallel.DistributedDataParallel(model)
+        else:
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[rank])
 
     optimizer = torch.optim.Adam(params=model.parameters(), **config['optimizer'])
     scheduler = build_scheduler(config['scheduler']['name'], optimizer, config['scheduler']['params'])
@@ -203,7 +231,7 @@ class Trainer:
             if self.config['scheduler']['update_interval'] == 'step':
                 self.scheduler.step()
 
-        if self.world_size > 1 and (self.device != torch.device("cpu")):
+        if self.world_size > 1 and self.device.type != 'cpu':
             torch.cuda.synchronize(self.device)
 
         if self.rank == 0:
@@ -231,8 +259,8 @@ class Trainer:
             clean = clean.cpu().numpy()
             enhanced = enhanced.detach().cpu().numpy()
             pesq_score_batch = Parallel(n_jobs=-1)(
-                delayed(pesq)(16000, c, e, 'wb') for c, e in zip(clean, enhanced))
-            pesq_score = torch.tensor(pesq_score_batch, device=self.device).mean()
+                delayed(_safe_pesq)(16000, c, e, 'wb') for c, e in zip(clean, enhanced))
+            pesq_score = torch.tensor(pesq_score_batch, device=self.device).nanmean()
             if self.world_size > 1:
                 pesq_score = reduce_value(pesq_score)
             total_pesq_score += pesq_score
@@ -254,7 +282,7 @@ class Trainer:
             self.validation_bar.set_postfix_str('valid_loss={:.3f}, pesq={:.4f}'.format(
                 total_loss / step, total_pesq_score / step))
 
-        if (self.world_size > 1) and (self.device != torch.device("cpu")):
+        if (self.world_size > 1) and self.device.type != 'cpu':
             torch.cuda.synchronize(self.device)
 
         if self.rank == 0:
@@ -300,13 +328,21 @@ class Trainer:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-C', '--config', default='configs/cfg_train.yaml')
-    parser.add_argument('-D', '--device', default='0', help='The index of the available devices, e.g. 0,1,2,3')
+    parser.add_argument('-D', '--device', default='', help='The index of the available devices, e.g. 0,1,2,3 or "cpu" for CPU training')
 
     args = parser.parse_args()
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-    args.world_size = len(args.device.split(','))
+
+    # Determine CPU vs GPU
+    args.use_cpu = args.device.strip().lower() == 'cpu' or args.device == ''
+
+    if args.use_cpu:
+        args.world_size = 1  # CPU training uses a single process
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+        args.world_size = len(args.device.split(','))
+
     config = OmegaConf.load(args.config)
-    
+
     if args.world_size > 1:
         torch.multiprocessing.spawn(
             run, args=(config, args,), nprocs=args.world_size, join=True)

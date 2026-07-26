@@ -131,4 +131,4 @@ dmypy.json
 .pyre/
 
 # Claude Code
-.claude/
+settings.json
