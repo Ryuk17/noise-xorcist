@@ -131,6 +131,7 @@ class Trainer:
         self.trainer_config = config['trainer']
         self.epochs = self.trainer_config['epochs']
         self.save_checkpoint_interval = self.trainer_config['save_checkpoint_interval']
+        self.validation_interval = self.trainer_config['validation_interval']
         self.clip_grad_norm_value = self.trainer_config['clip_grad_norm_value']
         self.resume = self.trainer_config['resume']
 
@@ -258,7 +259,7 @@ class Trainer:
 
             clean = clean.cpu().numpy()
             enhanced = enhanced.detach().cpu().numpy()
-            pesq_score_batch = Parallel(n_jobs=-1)(
+            pesq_score_batch = Parallel(n_jobs=-1, backend='threading')(
                 delayed(_safe_pesq)(16000, c, e, 'wb') for c, e in zip(clean, enhanced))
             pesq_score = torch.tensor(pesq_score_batch, device=self.device).nanmean()
             if self.world_size > 1:
@@ -305,15 +306,18 @@ class Trainer:
             self._train_epoch(epoch)
 
             self._set_eval_mode()
-            valid_loss, score = self._validation_epoch(epoch)
+            do_validate = (epoch % self.validation_interval == 0)
+            if do_validate:
+                valid_loss, score = self._validation_epoch(epoch)
             
             if self.config['scheduler']['update_interval'] == 'epoch':
                 if self.config['scheduler']['use_plateau']:
-                    self.scheduler.step(score)
+                    if do_validate:
+                        self.scheduler.step(score)
                 else:
                     self.scheduler.step()
 
-            if (self.rank == 0) and (epoch % self.save_checkpoint_interval == 0):
+            if do_validate and (self.rank == 0) and (epoch % self.save_checkpoint_interval == 0):
                 self._save_checkpoint(epoch, score)
 
         if self.rank == 0:
