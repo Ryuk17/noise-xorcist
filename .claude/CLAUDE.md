@@ -53,8 +53,8 @@ python dataloader.py
 
 ### Signal Processing (Traditional DSP)
 ```bash
-# Run example (MCRA noise estimation + spectral subtraction)
-python examples/mcra_spectral_substraction.py
+# Run example (IMCRA noise estimation + OMLSA gain), batch inference over an scp file
+python examples/imcra_omlsa.py --scp runs/noisy_testset.scp --ref_dir /input0/clean_testset_wav
 
 # Test individual estimators
 python tests/test_noise_estimation.py
@@ -124,7 +124,7 @@ noise-xorcist/
 │   └── utils.py
 │
 ├── examples/
-│   └── mcra_spectral_substraction.py   # End-to-end example comboing MCRA + spectral subtraction
+│   └── imcra_omlsa.py              # IMCRA + OMLSA batch inference over an scp file, writes inf.scp/ref.scp
 │
 ├── tests/                         # pytest-based tests
 │   ├── test_noise_estimation.py
