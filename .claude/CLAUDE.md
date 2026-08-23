@@ -43,9 +43,9 @@ python train.py -D 1
 # Inference
 python infer.py -C configs/cfg_infer.yaml -D 0
 
-# Evaluate metrics
-python evaluate.py --metric intrusive --config configs/cfg_infer.yaml
-python evaluate.py --metric dnsmos --config configs/cfg_infer.yaml
+# Evaluate metrics (直接传 scp, 或传 --enh_dir 从该目录读 inf.scp/ref.scp)
+python ../evaluation/evaluate.py --metric intrusive --inf_scp <enh_dir>/inf.scp --ref_scp <enh_dir>/ref.scp
+python ../evaluation/evaluate.py --metric dnsmos --inf_scp <enh_dir>/inf.scp [--device cpu]
 
 # Test DataLoader
 python dataloader.py

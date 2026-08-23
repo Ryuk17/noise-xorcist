@@ -70,3 +70,13 @@ noise-xorcist is a unified single-channel speech enhancement toolbox, which inco
 - [ClipAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
 - [BreakAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
 - [HowlingAugment](./noisyspeech_synthesizer/prepare_custom_datasets/augmentations.py)
+
+## Performance
+
+Intrusive metrics on the VoiceBank-DEMAND test set (824 utterances, 16 kHz).
+
+| Method | SDR  | SISNR  | PESQ  | ESTOI  |
+| --- | --- | --- | --- | --- |
+| Noisy | 8.4471 | 8.4461 | 1.9720 | 0.7867 |
+| IMCRA + OMLSA | 8.6204 | 9.2516 | 1.8279 | 0.7621 |
+| GTCRN | 18.4247 | 18.3654 | 2.7102 | 0.8360 |
