@@ -8,7 +8,10 @@ import numpy as np
 import soundfile as sf
 from pesq import PesqError, pesq
 from pystoi import stoi
-from p_tqdm import p_map
+try:
+    from p_tqdm import p_map
+except ImportError:
+    p_map = None
 from tqdm import tqdm
 
 
@@ -106,18 +109,18 @@ def main(args):
             data_pairs.append((uid, refs[uid], audio_path))
 
     ret = []
-    
-    ### Single thread
-    # for data_pair in tqdm(data_pairs):
-    #     tmp = process_one_pair(data_pair)
-    #     ret.append(tmp)
-    
-    ### Multi thread    
-    ret = p_map(
-        process_one_pair,
-        data_pairs,
-        num_cpus=args.nj,
-    )
+
+    if p_map is not None:
+        ### Multi thread
+        ret = p_map(
+            process_one_pair,
+            data_pairs,
+            num_cpus=args.nj,
+        )
+    else:
+        ### Single thread (p_tqdm 未安装时回退)
+        for data_pair in tqdm(data_pairs):
+            ret.append(process_one_pair(data_pair))
     
     outdir = Path(args.output_dir)
     outdir.mkdir(parents=True, exist_ok=True)
