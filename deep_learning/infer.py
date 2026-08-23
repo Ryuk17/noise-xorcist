@@ -15,7 +15,7 @@ def main(args):
     enh_folder = cfg_infer.network.enh_folder
     os.makedirs(enh_folder, exist_ok=True)
     
-    device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() else 'cpu')
+    device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() and not args.use_cpu else 'cpu')
 
     model = build_model(cfg_network['model']['name'], cfg_network['model']['params']).to(device)
     checkpoint = torch.load(cfg_infer.network.checkpoint, map_location=device)
@@ -58,7 +58,17 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument('-C', '--config', default='configs/cfg_infer.yaml')
-    parser.add_argument('-D', '--device', default='0', help='Index of the gpu device')
+    parser.add_argument('-D', '--device', default='', help='Index of the gpu device')
 
     args = parser.parse_args()
+    
+    # Determine CPU vs GPU
+    args.use_cpu = args.device.strip().lower() == 'cpu' or args.device == ''
+
+    if args.use_cpu:
+        args.world_size = 1  # CPU training uses a single process
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+        args.world_size = len(args.device.split(','))
+
     main(args)

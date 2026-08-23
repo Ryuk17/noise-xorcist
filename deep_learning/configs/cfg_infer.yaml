@@ -1,10 +1,10 @@
 test_dataset: 
-  noisy_dir: /data/ssd0/xiaobin.rong/Datasets/DNS3/test_noisy/
-  clean_dir: /data/ssd0/xiaobin.rong/Datasets/DNS3/test_clean/
+  noisy_dir: /input0/noisy_testset_wav
+  clean_dir: /input0/clean_testset_wav
 
 network:
-  exp_path: /data/ssd0/xiaobin.rong/study_se/DNS3/exp_gtcrn_2025-03-31-11h26m
+  exp_path: /hyperai/home/noise-xorcist/runs/exp_gtcrn_2026-08-23-01h26m
   config: ${network.exp_path}/config.yaml
-  ckpt_name: model_001
+  ckpt_name: best_model_180
   checkpoint: ${network.exp_path}/checkpoints/${network.ckpt_name}.tar
   enh_folder: ${network.exp_path}/${network.ckpt_name}/enhanced
